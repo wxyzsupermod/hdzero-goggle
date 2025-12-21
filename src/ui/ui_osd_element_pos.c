@@ -114,6 +114,8 @@ static osd_element_t osd_element_list[OSD_GOGGLE_NUM] = {
     {"Temperature Top", "goggle_temp_top"},
     {"Temperature Left", "goggle_temp_left"},
     {"Temperature Right", "goggle_temp_right"},
+    {"Head Tracker Compass", "head_tracker_compass"},
+    {"Head Tracker Altitude", "head_tracker_altitude"},
 };
 
 // string used for the dropdown menu

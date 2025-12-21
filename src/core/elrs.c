@@ -15,6 +15,30 @@
 #include <termios.h>
 #include <unistd.h>
 
+#ifdef __APPLE__
+#include <libkern/OSByteOrder.h>
+#define le16toh(x) OSSwapLittleToHostInt16(x)
+#define htole16(x) OSSwapHostToLittleInt16(x)
+// macOS doesn't have sem_timedwait, use trywait with sleep for emulator
+static int sem_timedwait_compat(sem_t *sem, const struct timespec *abs_timeout) {
+    struct timespec now;
+    clock_gettime(CLOCK_REALTIME, &now);
+    while (now.tv_sec < abs_timeout->tv_sec || 
+           (now.tv_sec == abs_timeout->tv_sec && now.tv_nsec < abs_timeout->tv_nsec)) {
+        if (sem_trywait(sem) == 0) {
+            return 0;
+        }
+        usleep(1000); // sleep 1ms
+        clock_gettime(CLOCK_REALTIME, &now);
+    }
+    errno = ETIMEDOUT;
+    return -1;
+}
+#define sem_timedwait sem_timedwait_compat
+#else
+#include <endian.h>
+#endif
+
 #include <log/log.h>
 
 #include "core/app_state.h"

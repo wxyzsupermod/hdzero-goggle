@@ -242,7 +242,21 @@ void ht_init() {
     ht_data.gyr_offset[1] = g_setting.ht.gyr_y;
     ht_data.gyr_offset[2] = g_setting.ht.gyr_z;
 
-    // start timer
+    // Initialize antenna tracker data
+    ht_data.antenna_tracker.is_calibrated = false;
+    ht_data.antenna_tracker.origin_latitude = 0.0;
+    ht_data.antenna_tracker.origin_longitude = 0.0;
+    ht_data.antenna_tracker.origin_altitude = 0.0;
+    ht_data.antenna_tracker.pan_offset = 0.0;
+    ht_data.antenna_tracker.tilt_offset = 0.0;
+
+    ht_data.gps_data.latitude = 0.0;
+    ht_data.gps_data.longitude = 0.0;
+    ht_data.gps_data.altitude = 0.0;
+    ht_data.gps_data.valid = false;
+
+#ifndef EMULATOR_BUILD
+    // start timer (not supported in emulator)
     timer_t timerId = 0;
     struct sigevent sev = {0};
     struct itimerspec its = {.it_value.tv_sec = 1,
@@ -263,6 +277,7 @@ void ht_init() {
     if (res != 0) {
         LOGE("Error timer_settime: %s\n", strerror(errno));
     }
+#endif
 }
 
 void ht_set_maxangle(int angle) {
@@ -400,6 +415,14 @@ int16_t *ht_get_channels() {
     return ht_data.htChannels;
 }
 
+float ht_get_pan_angle() {
+    return ht_data.panAngle;
+}
+
+float ht_get_tilt_angle() {
+    return ht_data.tiltAngle;
+}
+
 void head_alarm_init() {
     pthread_create(&head_alarm_handle, NULL, head_alarm_thread, NULL);
 }
@@ -431,4 +454,48 @@ void *head_alarm_thread(void *arg) {
         }
     }
     pthread_exit(NULL);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Antenna Tracker Functions
+
+// Update GPS data from Betaflight OSD
+void ht_antenna_tracker_update_gps(double latitude, double longitude, float altitude, bool valid) {
+    ht_data.gps_data.latitude = latitude;
+    ht_data.gps_data.longitude = longitude;
+    ht_data.gps_data.altitude = altitude;
+    ht_data.gps_data.valid = valid;
+}
+
+// Calibrate antenna tracker - capture current drone position and head angles
+void ht_antenna_tracker_calibrate() {
+    if (!ht_data.gps_data.valid) {
+        LOGW("Antenna tracker calibration failed: No valid GPS data");
+        return;
+    }
+
+    // Store drone origin position (where user is pointing)
+    ht_data.antenna_tracker.origin_latitude = ht_data.gps_data.latitude;
+    ht_data.antenna_tracker.origin_longitude = ht_data.gps_data.longitude;
+    ht_data.antenna_tracker.origin_altitude = ht_data.gps_data.altitude;
+
+    // Store current head tracker angles as offset
+    ht_data.antenna_tracker.pan_offset = ht_data.panAngle;
+    ht_data.antenna_tracker.tilt_offset = ht_data.tiltAngle;
+
+    ht_data.antenna_tracker.is_calibrated = true;
+
+    LOGI("Antenna tracker calibrated:");
+    LOGI("  Origin: %.6f, %.6f, %.1fm",
+         ht_data.antenna_tracker.origin_latitude,
+         ht_data.antenna_tracker.origin_longitude,
+         ht_data.antenna_tracker.origin_altitude);
+    LOGI("  Offsets: Pan=%.1f° Tilt=%.1f°",
+         ht_data.antenna_tracker.pan_offset,
+         ht_data.antenna_tracker.tilt_offset);
+}
+
+// Check if antenna tracker is calibrated
+bool ht_antenna_tracker_is_calibrated() {
+    return ht_data.antenna_tracker.is_calibrated;
 }

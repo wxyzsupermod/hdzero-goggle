@@ -15,6 +15,29 @@ extern "C" {
 
 #include "bmi270/bmi2_defs.h"
 
+// Antenna tracker GPS data from Betaflight OSD
+typedef struct {
+    double latitude;  // Current GPS latitude (degrees)
+    double longitude; // Current GPS longitude (degrees)
+    float altitude;   // Current GPS altitude (meters MSL)
+    bool valid;       // GPS fix valid
+} ht_gps_data_t;
+
+// Antenna tracker calibration data
+typedef struct {
+    // Drone origin position (home point)
+    double origin_latitude;
+    double origin_longitude;
+    float origin_altitude; // meters MSL
+
+    // Head tracker angles when pointing at origin during calibration
+    float pan_offset;  // degrees
+    float tilt_offset; // degrees
+
+    // Calibration state
+    bool is_calibrated;
+} ht_antenna_tracker_cal_t;
+
 typedef struct {
     struct bmi2_sens_data sensor_data;
 
@@ -47,6 +70,12 @@ typedef struct {
     // internal state
     uint8_t enable;
 
+    // Antenna tracker calibration
+    ht_antenna_tracker_cal_t antenna_tracker;
+
+    // Current GPS data from drone
+    ht_gps_data_t gps_data;
+
 } ht_data_t;
 
 void ht_init();
@@ -58,7 +87,14 @@ void ht_set_maxangle(int angle);
 void ht_set_alarm_angle();
 void ht_set_center_position();
 int16_t *ht_get_channels();
+float ht_get_pan_angle();
+float ht_get_tilt_angle();
 void head_alarm_init();
+
+// Antenna tracker functions
+void ht_antenna_tracker_calibrate();
+void ht_antenna_tracker_update_gps(double latitude, double longitude, float altitude, bool valid);
+bool ht_antenna_tracker_is_calibrated();
 
 #ifdef __cplusplus
 }

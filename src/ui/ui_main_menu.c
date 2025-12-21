@@ -24,6 +24,7 @@
 #include "ui/page_imagesettings.h"
 #include "ui/page_input.h"
 #include "ui/page_osd.h"
+#include "ui/page_osd_test.h"
 #include "ui/page_playback.h"
 #include "ui/page_power.h"
 #include "ui/page_record.h"
@@ -321,6 +322,7 @@ void main_menu_init(void) {
 #if defined(HDZBOXPRO) || defined(HDZGOGGLE2)
     page_packs[page_packs_count++] = &pp_analog_rssi;
 #endif
+    page_packs[page_packs_count++] = &pp_osd_test;
     page_packs[page_packs_count++] = &pp_sleep;
 
     menu = lv_menu_create(lv_scr_act());
@@ -374,7 +376,8 @@ void main_menu_init(void) {
 }
 
 static void bootup_action_completed() {
-    bootup_actions_fired = false;
+    // Continue with the next bootup action
+    handle_bootup_action();
 }
 
 static void handle_bootup_action() {

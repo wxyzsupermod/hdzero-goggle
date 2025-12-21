@@ -185,6 +185,16 @@ const setting_t g_setting_defaults = {
                 .show = true,
                 .position = {.mode_4_3 = {.x = 370, .y = 50}, .mode_16_9 = {.x = 370, .y = 50}},
             },
+            // OSD_GOGGLE_HEAD_TRACKER_COMPASS
+            {
+                .show = false,
+                .position = {.mode_4_3 = {.x = 490, .y = 10}, .mode_16_9 = {.x = 490, .y = 10}},
+            },
+            // OSD_GOGGLE_HEAD_TRACKER_ALTITUDE
+            {
+                .show = false,
+                .position = {.mode_4_3 = {.x = 1230, .y = 210}, .mode_16_9 = {.x = 1230, .y = 210}},
+            },
         },
     },
     .clock = {
@@ -407,6 +417,8 @@ void settings_load(void) {
     settings_load_osd_element(&g_setting.osd.element[OSD_GOGGLE_TEMP_TOP], "goggle_temp_top", &g_setting_defaults.osd.element[OSD_GOGGLE_TEMP_TOP]);
     settings_load_osd_element(&g_setting.osd.element[OSD_GOGGLE_TEMP_LEFT], "goggle_temp_left", &g_setting_defaults.osd.element[OSD_GOGGLE_TEMP_LEFT]);
     settings_load_osd_element(&g_setting.osd.element[OSD_GOGGLE_TEMP_RIGHT], "goggle_temp_right", &g_setting_defaults.osd.element[OSD_GOGGLE_TEMP_RIGHT]);
+    settings_load_osd_element(&g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_COMPASS], "head_tracker_compass", &g_setting_defaults.osd.element[OSD_GOGGLE_HEAD_TRACKER_COMPASS]);
+    settings_load_osd_element(&g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_ALTITUDE], "head_tracker_altitude", &g_setting_defaults.osd.element[OSD_GOGGLE_HEAD_TRACKER_ALTITUDE]);
 
     // power
     g_setting.power.voltage = ini_getl("power", "voltage_mv", g_setting_defaults.power.voltage, SETTING_INI);

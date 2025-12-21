@@ -1,6 +1,7 @@
 #include "osd.h"
 
 #include <fcntl.h>
+#include <math.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdint.h>
@@ -21,6 +22,7 @@
 #include "core/common.hh"
 #include "core/dvr.h"
 #include "core/elrs.h"
+#include "core/ht.h"
 #include "core/msp_displayport.h"
 #include "core/settings.h"
 #include "driver/dm5680.h"
@@ -391,6 +393,156 @@ char *channel2str(uint8_t is_hdzero, uint8_t is_lowband, uint8_t channel) // cha
     } else {
         return analog_channel_name[channel - 1];
     }
+}
+
+// Draw horizontal compass for head tracking (azimuth)
+void osd_head_tracker_compass_draw(int16_t heading_deg) {
+    if (!g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_COMPASS].show) {
+        lv_obj_add_flag(g_osd_hdzero.head_tracker_compass[is_fhd], LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+
+    lv_obj_t *canvas = g_osd_hdzero.head_tracker_compass[is_fhd];
+    int width = is_fhd ? 450 : 300;
+    int height = is_fhd ? 60 : 40;
+
+    static lv_color_t cbuf[450 * 60];
+    lv_canvas_set_buffer(canvas, cbuf, width, height, LV_IMG_CF_TRUE_COLOR);
+
+    // Clear canvas
+    lv_canvas_fill_bg(canvas, lv_color_hex(0x000000), LV_OPA_TRANSP);
+
+    // Draw compass scale
+    lv_draw_line_dsc_t line_dsc;
+    lv_draw_line_dsc_init(&line_dsc);
+    line_dsc.color = lv_color_white();
+    line_dsc.width = is_fhd ? 2 : 1;
+
+    lv_draw_label_dsc_t label_dsc;
+    lv_draw_label_dsc_init(&label_dsc);
+    label_dsc.color = lv_color_white();
+
+    int center_x = width / 2;
+    int deg_per_pixel = is_fhd ? 1 : 2;
+
+    // Draw tick marks and labels
+    for (int deg = -90; deg <= 90; deg += 10) {
+        int actual_deg = (heading_deg + deg + 360) % 360;
+        int x = center_x + (deg / deg_per_pixel);
+
+        if (x >= 0 && x < width) {
+            lv_point_t points[2];
+            points[0].x = x;
+            points[0].y = 0;
+            points[1].x = x;
+
+            if (deg % 30 == 0) {
+                points[1].y = height / 2;
+                lv_canvas_draw_line(canvas, points, 2, &line_dsc);
+
+                // Draw degree label
+                char label[8];
+                snprintf(label, sizeof(label), "%d", actual_deg);
+                lv_point_t label_pos = {x - 10, height / 2 + 2};
+                lv_canvas_draw_text(canvas, label_pos.x, label_pos.y, 30, &label_dsc, label);
+            } else {
+                points[1].y = height / 3;
+                lv_canvas_draw_line(canvas, points, 2, &line_dsc);
+            }
+        }
+    }
+
+    // Draw center indicator (triangle pointing down)
+    lv_point_t tri_points[4];
+    tri_points[0].x = center_x;
+    tri_points[0].y = 0;
+    tri_points[1].x = center_x - 5;
+    tri_points[1].y = 10;
+    tri_points[2].x = center_x + 5;
+    tri_points[2].y = 10;
+    tri_points[3].x = center_x;
+    tri_points[3].y = 0;
+
+    line_dsc.color = lv_color_make(255, 0, 0);
+    line_dsc.width = is_fhd ? 3 : 2;
+    lv_canvas_draw_line(canvas, &tri_points[0], 2, &line_dsc);
+    lv_canvas_draw_line(canvas, &tri_points[1], 2, &line_dsc);
+    lv_canvas_draw_line(canvas, &tri_points[2], 2, &line_dsc);
+
+    lv_obj_clear_flag(canvas, LV_OBJ_FLAG_HIDDEN);
+}
+
+// Draw vertical altitude/pitch indicator for head tracking
+void osd_head_tracker_altitude_draw(int16_t pitch_deg) {
+    if (!g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_ALTITUDE].show) {
+        lv_obj_add_flag(g_osd_hdzero.head_tracker_altitude[is_fhd], LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+
+    lv_obj_t *canvas = g_osd_hdzero.head_tracker_altitude[is_fhd];
+    int width = is_fhd ? 60 : 40;
+    int height = is_fhd ? 300 : 200;
+
+    static lv_color_t cbuf_alt[60 * 300];
+    lv_canvas_set_buffer(canvas, cbuf_alt, width, height, LV_IMG_CF_TRUE_COLOR);
+
+    // Clear canvas
+    lv_canvas_fill_bg(canvas, lv_color_hex(0x000000), LV_OPA_TRANSP);
+
+    // Draw altitude scale
+    lv_draw_line_dsc_t line_dsc;
+    lv_draw_line_dsc_init(&line_dsc);
+    line_dsc.color = lv_color_white();
+    line_dsc.width = is_fhd ? 2 : 1;
+
+    lv_draw_label_dsc_t label_dsc;
+    lv_draw_label_dsc_init(&label_dsc);
+    label_dsc.color = lv_color_white();
+
+    int center_y = height / 2;
+    int deg_per_pixel = is_fhd ? 1 : 2;
+
+    // Draw tick marks and labels (pitch from -45 to +45 degrees visible)
+    for (int deg = -45; deg <= 45; deg += 5) {
+        int actual_deg = pitch_deg + deg;
+        if (actual_deg < -90 || actual_deg > 90)
+            continue;
+
+        int y = center_y - (deg / deg_per_pixel);
+
+        if (y >= 0 && y < height) {
+            lv_point_t points[2];
+            points[0].x = 0;
+            points[0].y = y;
+            points[1].y = y;
+
+            if (deg % 15 == 0) {
+                points[1].x = width / 2;
+                lv_canvas_draw_line(canvas, points, 2, &line_dsc);
+
+                // Draw degree label
+                char label[8];
+                snprintf(label, sizeof(label), "%d", actual_deg);
+                lv_point_t label_pos = {width / 2 + 2, y - 8};
+                lv_canvas_draw_text(canvas, label_pos.x, label_pos.y, 20, &label_dsc, label);
+            } else {
+                points[1].x = width / 3;
+                lv_canvas_draw_line(canvas, points, 2, &line_dsc);
+            }
+        }
+    }
+
+    // Draw center indicator (horizontal line)
+    lv_point_t center_line[2];
+    center_line[0].x = 0;
+    center_line[0].y = center_y;
+    center_line[1].x = width - 1;
+    center_line[1].y = center_y;
+    line_dsc.color = lv_color_make(255, 0, 0);
+    line_dsc.width = is_fhd ? 3 : 2;
+    lv_canvas_draw_line(canvas, center_line, 2, &line_dsc);
+
+    lv_obj_clear_flag(canvas, LV_OBJ_FLAG_HIDDEN);
 }
 
 void osd_channel_show(bool bShow) {
@@ -808,6 +960,20 @@ void osd_hdzero_update(void) {
 
 #endif
     }
+
+    // Update head tracker OSD elements
+    // For now, use animated demo values (will be replaced with actual head tracker data)
+    static int demo_heading = 0;
+    static int demo_pitch = 0;
+    static int demo_counter = 0;
+
+    if (demo_counter++ % 5 == 0) {                           // Update every few frames
+        demo_heading = (demo_heading + 2) % 360;             // Slowly rotate heading
+        demo_pitch = (int)(15.0 * sin(demo_counter * 0.05)); // Oscillate pitch
+    }
+
+    osd_head_tracker_compass_draw(demo_heading);
+    osd_head_tracker_altitude_draw(demo_pitch);
 }
 
 int osd_clear(void) {
@@ -893,6 +1059,18 @@ static void embedded_osd_init(uint8_t fhd) {
 
 #endif
     }
+
+    // Initialize head tracker compass (horizontal at top)
+    g_osd_hdzero.head_tracker_compass[fhd] = lv_canvas_create(so);
+    lv_obj_set_size(g_osd_hdzero.head_tracker_compass[fhd], fhd ? 450 : 300, fhd ? 60 : 40);
+    osd_object_set_pos(fhd, g_osd_hdzero.head_tracker_compass[fhd], &g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_COMPASS].position);
+    lv_obj_add_flag(g_osd_hdzero.head_tracker_compass[fhd], LV_OBJ_FLAG_HIDDEN);
+
+    // Initialize head tracker altitude/pitch (vertical on right side)
+    g_osd_hdzero.head_tracker_altitude[fhd] = lv_canvas_create(so);
+    lv_obj_set_size(g_osd_hdzero.head_tracker_altitude[fhd], fhd ? 60 : 40, fhd ? 300 : 200);
+    osd_object_set_pos(fhd, g_osd_hdzero.head_tracker_altitude[fhd], &g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_ALTITUDE].position);
+    lv_obj_add_flag(g_osd_hdzero.head_tracker_altitude[fhd], LV_OBJ_FLAG_HIDDEN);
 }
 
 void osd_update_element_positions() {
@@ -934,6 +1112,10 @@ void osd_update_element_positions() {
 
 #endif
     }
+
+    // Update head tracker element positions
+    osd_object_set_pos(is_fhd, g_osd_hdzero.head_tracker_compass[is_fhd], &g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_COMPASS].position);
+    osd_object_set_pos(is_fhd, g_osd_hdzero.head_tracker_altitude[is_fhd], &g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_ALTITUDE].position);
 }
 
 static void fc_osd_init(uint8_t fhd, uint16_t OFFSET_X, uint16_t OFFSET_Y) {
@@ -1181,8 +1363,82 @@ void osd_signal_update() {
     sem_post(&osd_semaphore);
 }
 
+// Parse GPS coordinates from Betaflight OSD text
+// When armed, we capture the home position coordinates as displayed in the OSD
+void osd_parse_gps_data() {
+    // GPS coordinates in Betaflight OSD are displayed in special character format
+    // For simplicity, we'll scan for numeric patterns that resemble coordinates
+    // Format typically: latitude (XX.XXXXXX) and longitude (XXX.XXXXXX)
+
+    char line_text[HD_HMAX + 1];
+    static double gps_lat = 0.0;
+    static double gps_lon = 0.0;
+    static float gps_alt = 0.0;
+    bool coords_found = false;
+
+    for (int row = 0; row < HD_VMAX; row++) {
+        // Extract ASCII text from this row
+        int text_len = 0;
+        for (int col = 0; col < HD_HMAX; col++) {
+            uint16_t ch = fc_osd[row][col];
+            // Convert OSD character codes to ASCII
+            if (ch >= 0x20 && ch < 0x80) {
+                line_text[text_len++] = (char)ch;
+            } else {
+                line_text[text_len++] = ' ';
+            }
+        }
+        line_text[text_len] = '\0';
+
+        // Look for GPS home icon/text and coordinates
+        // Betaflight shows home as special symbol followed by distance/direction
+        // For step 3: We'll assume GPS is valid if we detect any GPS-related text
+        if (strstr(line_text, "GPS") != NULL ||
+            strstr(line_text, "SAT") != NULL ||
+            strstr(line_text, "HOME") != NULL) {
+            coords_found = true;
+
+            // TODO: Parse actual lat/lon from OSD when displayed
+            // For now, we'll get coordinates when armed (home position set)
+        }
+    }
+
+    // Update GPS validity - coordinates will be captured on arm
+    if (coords_found) {
+        ht_antenna_tracker_update_gps(gps_lat, gps_lon, gps_alt, true);
+    }
+}
+
+// Detect if drone is armed by scanning OSD for armed indicator
+bool osd_detect_armed() {
+    char line_text[HD_HMAX + 1];
+
+    // Scan OSD for "ARMED" text or armed symbol
+    for (int row = 0; row < HD_VMAX; row++) {
+        int text_len = 0;
+        for (int col = 0; col < HD_HMAX; col++) {
+            uint16_t ch = fc_osd[row][col];
+            if (ch >= 0x20 && ch < 0x80) {
+                line_text[text_len++] = (char)ch;
+            } else {
+                line_text[text_len++] = ' ';
+            }
+        }
+        line_text[text_len] = '\0';
+
+        // Check for "ARMED" or "ARM" text
+        if (strstr(line_text, "ARMED") != NULL || strstr(line_text, "ARM") != NULL) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void *thread_osd(void *ptr) {
     static uint8_t fhd_d = 0;
+    static bool was_armed = false;
+
     for (;;) {
         // wait for signal to render
         sem_wait(&osd_semaphore);
@@ -1205,6 +1461,27 @@ void *thread_osd(void *ptr) {
                 }
             }
         }
+
+        // Parse GPS and detect armed state for antenna tracker auto-calibration
+        osd_parse_gps_data();
+        bool is_armed = osd_detect_armed();
+
+        // Auto-calibrate on arm (rising edge)
+        // When drone arms, it sets home position - perfect time to calibrate
+        if (is_armed && !was_armed) {
+            LOGI("Drone armed - capturing home position for antenna tracker");
+
+            // Set GPS as the drone's current position (which becomes home on arm)
+            // Using placeholder coordinates for step 3
+            // In production, these would come from MSP_RAW_GPS or parsed from OSD
+            double home_lat = 37.7749; // Placeholder - San Francisco
+            double home_lon = -122.4194;
+            float home_alt = 0.0;
+
+            ht_antenna_tracker_update_gps(home_lat, home_lon, home_alt, true);
+            ht_antenna_tracker_calibrate();
+        }
+        was_armed = is_armed;
     }
     return NULL;
 }
