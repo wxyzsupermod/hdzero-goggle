@@ -26,6 +26,7 @@ static lv_coord_t col_dsc[] = {UI_HT_COLS};
 static lv_coord_t row_dsc[] = {UI_HT_ROWS};
 
 static lv_obj_t *label_cali;
+static lv_obj_t *label_test_cali;
 static lv_obj_t *label_center;
 static slider_group_t slider_group;
 static lv_timer_t *timer;
@@ -45,6 +46,7 @@ static void update_visibility(uint8_t page) {
     // enable/disable elements
     if (g_setting.ht.enable && page == PAGE1) {
         lv_obj_clear_state(label_cali, STATE_DISABLED);
+        lv_obj_clear_state(label_test_cali, STATE_DISABLED);
         lv_obj_clear_state(label_center, STATE_DISABLED);
         slider_enable(&slider_group, true);
 
@@ -52,9 +54,11 @@ static void update_visibility(uint8_t page) {
         lv_obj_add_flag(pp_headtracker.p_arr.panel[2], FLAG_SELECTABLE);
         lv_obj_add_flag(pp_headtracker.p_arr.panel[3], FLAG_SELECTABLE);
         lv_obj_add_flag(pp_headtracker.p_arr.panel[4], FLAG_SELECTABLE);
+        lv_obj_add_flag(pp_headtracker.p_arr.panel[5], FLAG_SELECTABLE);
 
     } else if (page == PAGE1) {
         lv_obj_add_state(label_cali, STATE_DISABLED);
+        lv_obj_add_state(label_test_cali, STATE_DISABLED);
         lv_obj_add_state(label_center, STATE_DISABLED);
         slider_enable(&slider_group, false);
 
@@ -62,6 +66,7 @@ static void update_visibility(uint8_t page) {
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[2], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[3], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[4], FLAG_SELECTABLE);
+        lv_obj_clear_flag(pp_headtracker.p_arr.panel[5], FLAG_SELECTABLE);
     }
 
     if (g_setting.ht.enable && page == PAGE2) {
@@ -96,6 +101,7 @@ static void update_visibility(uint8_t page) {
         btn_group_show(&btn_group, true);
         slider_show(&slider_group, true);
         lv_obj_clear_flag(label_cali, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(label_test_cali, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(label_center, LV_OBJ_FLAG_HIDDEN);
 
         // hide page 2
@@ -109,6 +115,7 @@ static void update_visibility(uint8_t page) {
         btn_group_show(&btn_group, false);
         slider_show(&slider_group, false);
         lv_obj_add_flag(label_cali, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(label_test_cali, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(label_center, LV_OBJ_FLAG_HIDDEN);
 
         // show page 2
@@ -175,9 +182,11 @@ static lv_obj_t *page_headtracker_create(lv_obj_t *parent, panel_arr_t *arr) {
 
     label_cali = create_label_item(cont, _lang("Calibrate"), 1, 2, 1);
 
-    label_center = create_label_item(cont, _lang("Set Center"), 1, 3, 1);
+    label_test_cali = create_label_item(cont, "Test GPS Calib", 1, 3, 1);
 
-    create_slider_item(&slider_group, cont, _lang("Max Angle"), 360, g_setting.ht.max_angle, 4);
+    label_center = create_label_item(cont, _lang("Set Center"), 1, 4, 1);
+
+    create_slider_item(&slider_group, cont, _lang("Max Angle"), 360, g_setting.ht.max_angle, 5);
     lv_slider_set_range(slider_group.slider, 0, 360);
 
     snprintf(buf, sizeof(buf), "< %s", _lang("Back"));
@@ -324,8 +333,15 @@ static void page_headtracker_on_click_page1(uint8_t key, int sel) {
         lv_label_set_text(label_cali, _lang("Re-calibrate"));
         lv_timer_handler();
     } else if (sel == 3) {
-        ht_set_center_position();
+        snprintf(buf, sizeof(buf), "%s...", "Test GPS");
+        lv_label_set_text(label_test_cali, buf);
+        lv_timer_handler();
+        ht_antenna_tracker_test_calibrate();
+        lv_label_set_text(label_test_cali, "Test GPS Calib");
+        lv_timer_handler();
     } else if (sel == 4) {
+        ht_set_center_position();
+    } else if (sel == 5) {
         if (angle_slider_selected) {
             page_headtracker_exit_slider();
         } else {

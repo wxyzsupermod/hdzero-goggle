@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
@@ -479,4 +480,92 @@ void ht_antenna_tracker_calibrate() {
 
 bool ht_antenna_tracker_is_calibrated() {
     return ht_data.antenna_tracker.is_calibrated;
+}
+
+// Test calibration with dummy coordinates for development
+void ht_antenna_tracker_test_calibrate() {
+    // Set dummy GPS at origin (home position)
+    ht_data.gps_data.latitude = 37.7749;
+    ht_data.gps_data.longitude = -122.4194;
+    ht_data.gps_data.altitude = 0.0f;
+    ht_data.gps_data.valid = true;
+
+    // Store as origin
+    ht_data.antenna_tracker.origin_latitude = ht_data.gps_data.latitude;
+    ht_data.antenna_tracker.origin_longitude = ht_data.gps_data.longitude;
+    ht_data.antenna_tracker.origin_altitude = ht_data.gps_data.altitude;
+
+    // Store current head tracker angles as offsets
+    ht_data.antenna_tracker.pan_offset = ht_data.panAngle;
+    ht_data.antenna_tracker.tilt_offset = ht_data.tiltAngle;
+    ht_data.antenna_tracker.is_calibrated = true;
+
+    // Now set dummy drone position 100m north and 50m up
+    ht_data.gps_data.latitude = 37.7749 + (100.0 / 111111.0); // ~100m north
+    ht_data.gps_data.longitude = -122.4194;                   // same longitude
+    ht_data.gps_data.altitude = 50.0f;                        // 50m up
+    ht_data.gps_data.valid = true;
+
+    LOGI("Test calibration: home at %.6f,%.6f, drone at %.6f,%.6f,%.1fm",
+         ht_data.antenna_tracker.origin_latitude,
+         ht_data.antenna_tracker.origin_longitude,
+         ht_data.gps_data.latitude,
+         ht_data.gps_data.longitude,
+         ht_data.gps_data.altitude);
+}
+
+// Calculate azimuth (bearing) from origin to drone in degrees (0-360)
+float ht_get_drone_azimuth() {
+    if (!ht_data.antenna_tracker.is_calibrated || !ht_data.gps_data.valid) {
+        return 0.0f; // Return 0 if not calibrated or no GPS
+    }
+
+    // Convert to radians
+    double lat1 = ht_data.antenna_tracker.origin_latitude * DEG_TO_RAD;
+    double lon1 = ht_data.antenna_tracker.origin_longitude * DEG_TO_RAD;
+    double lat2 = ht_data.gps_data.latitude * DEG_TO_RAD;
+    double lon2 = ht_data.gps_data.longitude * DEG_TO_RAD;
+
+    // Calculate bearing using forward azimuth formula
+    double dlon = lon2 - lon1;
+    double y = sin(dlon) * cos(lat2);
+    double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dlon);
+    double bearing = atan2(y, x);
+
+    // Convert to degrees and normalize to 0-360
+    bearing = bearing * RAD_TO_DEG;
+    if (bearing < 0) {
+        bearing += 360.0;
+    }
+
+    return (float)bearing;
+}
+
+// Calculate elevation angle from origin to drone in degrees
+float ht_get_drone_elevation() {
+    if (!ht_data.antenna_tracker.is_calibrated || !ht_data.gps_data.valid) {
+        return 0.0f; // Return 0 if not calibrated or no GPS
+    }
+
+    // Convert to radians
+    double lat1 = ht_data.antenna_tracker.origin_latitude * DEG_TO_RAD;
+    double lon1 = ht_data.antenna_tracker.origin_longitude * DEG_TO_RAD;
+    double lat2 = ht_data.gps_data.latitude * DEG_TO_RAD;
+    double lon2 = ht_data.gps_data.longitude * DEG_TO_RAD;
+
+    // Calculate horizontal distance using haversine formula
+    double dlat = lat2 - lat1;
+    double dlon = lon2 - lon1;
+    double a = sin(dlat / 2) * sin(dlat / 2) +
+               cos(lat1) * cos(lat2) * sin(dlon / 2) * sin(dlon / 2);
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    double horizontal_distance = 6371000.0 * c; // Earth radius in meters
+
+    // Calculate vertical distance
+    double vertical_distance = ht_data.gps_data.altitude - ht_data.antenna_tracker.origin_altitude;
+
+    // Calculate elevation angle
+    double elevation = atan2(vertical_distance, horizontal_distance) * RAD_TO_DEG;
+
+    return (float)elevation;
 }

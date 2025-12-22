@@ -84,7 +84,7 @@ extern "C" {
 #define UI_INPUT_OPTION_HEIGHT            300
 #define UI_INPUT_DROPDOWN_WIDTH           320
 #define UI_OSD_COLS                       160, 180, 160, 160, 120, 160, LV_GRID_TEMPLATE_LAST
-#define UI_OSD_ROWS                       60, 60, 60, 60, 60, 60, 60, 60, 60, 60, LV_GRID_TEMPLATE_LAST
+#define UI_OSD_ROWS                       60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, LV_GRID_TEMPLATE_LAST
 #define UI_OSD_TEXT_FONT                  &lv_font_montserrat_20
 #define UI_PLAYBACK_COLS                  320, 320, 320, LV_GRID_TEMPLATE_LAST
 #define UI_PLAYBACK_ROWS                  150, 30, 150, 30, 150, 30, 30, LV_GRID_TEMPLATE_LAST
@@ -227,7 +227,7 @@ static inline int UI_STATUS_BAR_LABEL_WIDTH() {
 #define UI_INPUT_OPTION_HEIGHT            200
 #define UI_INPUT_DROPDOWN_WIDTH           210
 #define UI_OSD_COLS                       106, 120, 106, 106, 80, 106, LV_GRID_TEMPLATE_LAST
-#define UI_OSD_ROWS                       40, 40, 40, 40, 40, 40, 40, 40, 40, 40, LV_GRID_TEMPLATE_LAST
+#define UI_OSD_ROWS                       40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, LV_GRID_TEMPLATE_LAST
 #define UI_OSD_TEXT_FONT                  &lv_font_montserrat_14
 #define UI_PLAYBACK_COLS                  210, 210, 210, LV_GRID_TEMPLATE_LAST
 #define UI_PLAYBACK_ROWS                  100, 20, 100, 20, 100, 20, 20, LV_GRID_TEMPLATE_LAST

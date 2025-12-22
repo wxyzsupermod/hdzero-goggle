@@ -155,7 +155,7 @@ static setting_osd_goggle_element_t *get_osd_element_setting_entry(int element_i
 
 // creates the string used for the dropdown menu
 static void fill_osd_elements_str() {
-    int max_element = OSD_GOGGLE_ANT3;
+    int max_element = OSD_GOGGLE_HEAD_TRACKER_ALTITUDE;
 
     if (g_setting.storage.selftest) {
         max_element = OSD_GOGGLE_TEMP_RIGHT;

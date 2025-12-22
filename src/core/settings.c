@@ -188,12 +188,12 @@ const setting_t g_setting_defaults = {
             // OSD_GOGGLE_HEAD_TRACKER_COMPASS
             {
                 .show = false,
-                .position = {.mode_4_3 = {.x = 490, .y = 10}, .mode_16_9 = {.x = 490, .y = 10}},
+                .position = {.mode_4_3 = {.x = 12, .y = 49}, .mode_16_9 = {.x = 12, .y = 49}},
             },
             // OSD_GOGGLE_HEAD_TRACKER_ALTITUDE
             {
                 .show = false,
-                .position = {.mode_4_3 = {.x = 1230, .y = 210}, .mode_16_9 = {.x = 1230, .y = 210}},
+                .position = {.mode_4_3 = {.x = 1208, .y = 31}, .mode_16_9 = {.x = 1208, .y = 31}},
             },
         },
     },

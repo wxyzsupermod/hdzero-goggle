@@ -460,7 +460,7 @@ void osd_head_tracker_compass_draw(int16_t heading_deg) {
         }
     }
 
-    // Draw center indicator (triangle pointing down)
+    // Draw center indicator (triangle pointing down) - this shows where user is pointing
     int tri_size = is_fhd ? 8 : 6;
     lv_point_t tri_points[4];
     tri_points[0].x = center_x;
@@ -477,6 +477,44 @@ void osd_head_tracker_compass_draw(int16_t heading_deg) {
     lv_canvas_draw_line(canvas, &tri_points[0], 2, &line_dsc);
     lv_canvas_draw_line(canvas, &tri_points[1], 2, &line_dsc);
     lv_canvas_draw_line(canvas, &tri_points[2], 2, &line_dsc);
+
+    // Draw drone direction indicator if GPS data is valid and tracker is calibrated
+    if (ht_antenna_tracker_is_calibrated()) {
+        float drone_azimuth = ht_get_drone_azimuth();
+        // Calculate angular difference between drone and current heading
+        float angle_diff = drone_azimuth - heading_deg;
+
+        // Normalize to -180 to 180
+        while (angle_diff > 180)
+            angle_diff -= 360;
+        while (angle_diff < -180)
+            angle_diff += 360;
+
+        // Calculate x position for drone indicator
+        int drone_x = center_x + (int)(angle_diff * pixels_per_deg);
+
+        // Only draw if within visible range
+        if (drone_x >= tri_size && drone_x < width - tri_size) {
+            // Draw drone indicator as a triangle pointing down (different from center)
+            lv_point_t drone_tri[4];
+            int drone_tri_size = is_fhd ? 10 : 7; // Slightly larger
+            drone_tri[0].x = drone_x;
+            drone_tri[0].y = 0;
+            drone_tri[1].x = drone_x - drone_tri_size;
+            drone_tri[1].y = drone_tri_size * 2;
+            drone_tri[2].x = drone_x + drone_tri_size;
+            drone_tri[2].y = drone_tri_size * 2;
+            drone_tri[3].x = drone_x;
+            drone_tri[3].y = 0;
+
+            // Draw filled triangle in green to distinguish from red centering pin
+            line_dsc.color = lv_color_make(0, 255, 0);
+            line_dsc.width = is_fhd ? 4 : 3;
+            lv_canvas_draw_line(canvas, &drone_tri[0], 2, &line_dsc);
+            lv_canvas_draw_line(canvas, &drone_tri[1], 2, &line_dsc);
+            lv_canvas_draw_line(canvas, &drone_tri[2], 2, &line_dsc);
+        }
+    }
 
     lv_obj_clear_flag(canvas, LV_OBJ_FLAG_HIDDEN);
 }
@@ -542,7 +580,7 @@ void osd_head_tracker_altitude_draw(int16_t pitch_deg) {
         }
     }
 
-    // Draw center indicator (horizontal line)
+    // Draw center indicator (horizontal line) - this shows where user is pointing
     lv_point_t center_line[2];
     center_line[0].x = 0;
     center_line[0].y = center_y;
@@ -551,6 +589,30 @@ void osd_head_tracker_altitude_draw(int16_t pitch_deg) {
     line_dsc.color = lv_color_make(255, 0, 0);
     line_dsc.width = is_fhd ? 3 : 2;
     lv_canvas_draw_line(canvas, center_line, 2, &line_dsc);
+
+    // Draw drone elevation indicator if GPS data is valid and tracker is calibrated
+    if (ht_antenna_tracker_is_calibrated()) {
+        float drone_elevation = ht_get_drone_elevation();
+        // Calculate angular difference between drone and current pitch
+        float angle_diff = drone_elevation - pitch_deg;
+
+        // Calculate y position for drone indicator (inverted because y increases downward)
+        int drone_y = center_y - (int)(angle_diff * pixels_per_deg);
+
+        // Only draw if within visible range and within reasonable elevation bounds
+        if (drone_y >= 10 && drone_y < height - 10) {
+            // Draw drone indicator as a horizontal line in green
+            lv_point_t drone_line[2];
+            drone_line[0].x = 0;
+            drone_line[0].y = drone_y;
+            drone_line[1].x = width - 1;
+            drone_line[1].y = drone_y;
+
+            line_dsc.color = lv_color_make(0, 255, 0);
+            line_dsc.width = is_fhd ? 4 : 3;
+            lv_canvas_draw_line(canvas, drone_line, 2, &line_dsc);
+        }
+    }
 
     lv_obj_clear_flag(canvas, LV_OBJ_FLAG_HIDDEN);
 }
@@ -971,19 +1033,12 @@ void osd_hdzero_update(void) {
 #endif
     }
 
-    // Update head tracker OSD elements
-    // For now, use animated demo values (will be replaced with actual head tracker data)
-    static int demo_heading = 0;
-    static int demo_pitch = 0;
-    static int demo_counter = 0;
+    // Update head tracker OSD elements with actual head tracker data
+    int16_t heading_deg = (int16_t)ht_get_pan_angle();
+    int16_t pitch_deg = (int16_t)ht_get_tilt_angle();
 
-    if (demo_counter++ % 5 == 0) {                           // Update every few frames
-        demo_heading = (demo_heading + 2) % 360;             // Slowly rotate heading
-        demo_pitch = (int)(15.0 * sin(demo_counter * 0.05)); // Oscillate pitch
-    }
-
-    osd_head_tracker_compass_draw(demo_heading);
-    osd_head_tracker_altitude_draw(demo_pitch);
+    osd_head_tracker_compass_draw(heading_deg);
+    osd_head_tracker_altitude_draw(pitch_deg);
 }
 
 int osd_clear(void) {
