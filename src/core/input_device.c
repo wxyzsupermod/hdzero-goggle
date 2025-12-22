@@ -1,61 +1,28 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdint.h>
 #ifndef EMULATOR_BUILD
 #include <linux/input.h>
 #include <sys/epoll.h>
 #else
 // Stub definitions for emulator
-#define EV_SYN 0x00
-#define EV_KEY 0x01
-#define EV_REL 0x02
-#define EV_ABS 0x03
-
-#define SYN_REPORT    0
-#define SYN_MT_REPORT 2
-
-#define ABS_X             0x00
-#define ABS_Y             0x01
-#define ABS_PRESSURE      0x18
-#define ABS_MT_POSITION_X 0x35
-#define ABS_MT_POSITION_Y 0x36
-#define ABS_MT_PRESSURE   0x3a
-
-#define REL_X 0x00
-#define REL_Y 0x01
-
+#define EV_KEY 1
+#define EV_REL 2
+#define EV_SYN 0
 struct input_event {
     unsigned long time;
     unsigned short type;
     unsigned short code;
     int value;
 };
-
-// Stub epoll definitions
-typedef union epoll_data {
-    void *ptr;
-    int fd;
-    uint32_t u32;
-    uint64_t u64;
-} epoll_data_t;
-
-struct epoll_event {
-    uint32_t events;
-    epoll_data_t data;
-};
-
-#define EPOLLIN       0x001
-#define EPOLL_CTL_ADD 1
-
-static inline int epoll_create(int size) { return -1; }
-static inline int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event) { return -1; }
-static inline int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout) { return -1; }
 #endif
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef EMULATOR_BUILD
+#include <sys/epoll.h>
+#endif
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -93,9 +60,6 @@ static inline int epoll_wait(int epfd, struct epoll_event *events, int maxevents
 #include "ui/page_power.h"
 #include "ui/page_scannow.h"
 #include "ui/page_source.h"
-#ifdef EMULATOR_BUILD
-#include "ui/page_osd_test.h"
-#endif
 #include "ui/ui_image_setting.h"
 #include "ui/ui_main_menu.h"
 #include "ui/ui_osd_element_pos.h"
@@ -644,15 +608,6 @@ static void *thread_input_device(void *ptr) {
                     if (!btn_a_start) {
                         btn_a_start = event.key.timestamp;
                     }
-                    break;
-
-                default:
-#ifdef EMULATOR_BUILD
-                    // Pass keyboard events to OSD test page when active
-                    if (g_app_state == APP_STATE_SUBMENU) {
-                        page_osd_test_handle_keyboard(event.key.keysym.sym);
-                    }
-#endif
                     break;
                 }
                 break;

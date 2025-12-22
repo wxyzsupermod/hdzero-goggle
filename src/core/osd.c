@@ -152,6 +152,13 @@ static osd_font_t osd_font_hd;
 static osd_font_t osd_font_fhd;
 static lv_obj_t *analog_rssi_bar;
 
+// Canvas buffers for head tracker OSD elements
+// Compass spans full width at top, altitude spans full height on right
+static lv_color_t cbuf_compass_hd[1280 * 60];   // Full width x 60px height
+static lv_color_t cbuf_compass_fhd[1920 * 90];  // Full width x 90px height
+static lv_color_t cbuf_altitude_hd[60 * 720];   // 60px width x full height
+static lv_color_t cbuf_altitude_fhd[90 * 1080]; // 90px width x full height
+
 void osd_llock_show(bool bShow) {
     char buf[128];
 
@@ -403,14 +410,11 @@ void osd_head_tracker_compass_draw(int16_t heading_deg) {
     }
 
     lv_obj_t *canvas = g_osd_hdzero.head_tracker_compass[is_fhd];
-    int width = is_fhd ? 450 : 300;
-    int height = is_fhd ? 60 : 40;
+    int width = is_fhd ? 1920 : 1280; // Full screen width
+    int height = is_fhd ? 60 : 42;    // Taller to prevent text cutoff
 
-    static lv_color_t cbuf[450 * 60];
-    lv_canvas_set_buffer(canvas, cbuf, width, height, LV_IMG_CF_TRUE_COLOR);
-
-    // Clear canvas
-    lv_canvas_fill_bg(canvas, lv_color_hex(0x000000), LV_OPA_TRANSP);
+    // Clear canvas with transparent background
+    lv_canvas_fill_bg(canvas, lv_color_hex(0x000000), LV_OPA_0);
 
     // Draw compass scale
     lv_draw_line_dsc_t line_dsc;
@@ -421,14 +425,18 @@ void osd_head_tracker_compass_draw(int16_t heading_deg) {
     lv_draw_label_dsc_t label_dsc;
     lv_draw_label_dsc_init(&label_dsc);
     label_dsc.color = lv_color_white();
+    label_dsc.opa = LV_OPA_COVER;
+    label_dsc.font = &lv_font_montserrat_16;
 
     int center_x = width / 2;
-    int deg_per_pixel = is_fhd ? 1 : 2;
+    int pixels_per_deg = is_fhd ? 4 : 3; // More pixels per degree for better spacing
+    int tick_height = is_fhd ? 20 : 14;  // Major tick height
+    int label_y = is_fhd ? 24 : 17;      // Label position below ticks
 
     // Draw tick marks and labels
-    for (int deg = -90; deg <= 90; deg += 10) {
+    for (int deg = -180; deg <= 180; deg += 10) {
         int actual_deg = (heading_deg + deg + 360) % 360;
-        int x = center_x + (deg / deg_per_pixel);
+        int x = center_x + (deg * pixels_per_deg);
 
         if (x >= 0 && x < width) {
             lv_point_t points[2];
@@ -437,29 +445,30 @@ void osd_head_tracker_compass_draw(int16_t heading_deg) {
             points[1].x = x;
 
             if (deg % 30 == 0) {
-                points[1].y = height / 2;
+                points[1].y = tick_height;
                 lv_canvas_draw_line(canvas, points, 2, &line_dsc);
 
                 // Draw degree label
                 char label[8];
                 snprintf(label, sizeof(label), "%d", actual_deg);
-                lv_point_t label_pos = {x - 10, height / 2 + 2};
-                lv_canvas_draw_text(canvas, label_pos.x, label_pos.y, 30, &label_dsc, label);
+                lv_point_t label_pos = {x - (is_fhd ? 18 : 12), label_y};
+                lv_canvas_draw_text(canvas, label_pos.x, label_pos.y, is_fhd ? 50 : 35, &label_dsc, label);
             } else {
-                points[1].y = height / 3;
+                points[1].y = tick_height / 2;
                 lv_canvas_draw_line(canvas, points, 2, &line_dsc);
             }
         }
     }
 
     // Draw center indicator (triangle pointing down)
+    int tri_size = is_fhd ? 8 : 6;
     lv_point_t tri_points[4];
     tri_points[0].x = center_x;
     tri_points[0].y = 0;
-    tri_points[1].x = center_x - 5;
-    tri_points[1].y = 10;
-    tri_points[2].x = center_x + 5;
-    tri_points[2].y = 10;
+    tri_points[1].x = center_x - tri_size;
+    tri_points[1].y = tri_size * 2;
+    tri_points[2].x = center_x + tri_size;
+    tri_points[2].y = tri_size * 2;
     tri_points[3].x = center_x;
     tri_points[3].y = 0;
 
@@ -480,14 +489,11 @@ void osd_head_tracker_altitude_draw(int16_t pitch_deg) {
     }
 
     lv_obj_t *canvas = g_osd_hdzero.head_tracker_altitude[is_fhd];
-    int width = is_fhd ? 60 : 40;
-    int height = is_fhd ? 300 : 200;
+    int width = is_fhd ? 80 : 55;     // Wider to prevent text cutoff
+    int height = is_fhd ? 1080 : 720; // Full screen height
 
-    static lv_color_t cbuf_alt[60 * 300];
-    lv_canvas_set_buffer(canvas, cbuf_alt, width, height, LV_IMG_CF_TRUE_COLOR);
-
-    // Clear canvas
-    lv_canvas_fill_bg(canvas, lv_color_hex(0x000000), LV_OPA_TRANSP);
+    // Clear canvas with transparent background
+    lv_canvas_fill_bg(canvas, lv_color_hex(0x000000), LV_OPA_0);
 
     // Draw altitude scale
     lv_draw_line_dsc_t line_dsc;
@@ -498,17 +504,21 @@ void osd_head_tracker_altitude_draw(int16_t pitch_deg) {
     lv_draw_label_dsc_t label_dsc;
     lv_draw_label_dsc_init(&label_dsc);
     label_dsc.color = lv_color_white();
+    label_dsc.opa = LV_OPA_COVER;
+    label_dsc.font = &lv_font_montserrat_16;
 
     int center_y = height / 2;
-    int deg_per_pixel = is_fhd ? 1 : 2;
+    int pixels_per_deg = is_fhd ? 4 : 3; // More pixels per degree for better spacing
+    int tick_width = is_fhd ? 28 : 20;   // Major tick width
+    int label_x = is_fhd ? 32 : 23;      // Label position to the right of ticks
 
-    // Draw tick marks and labels (pitch from -45 to +45 degrees visible)
-    for (int deg = -45; deg <= 45; deg += 5) {
+    // Draw tick marks and labels (pitch from -90 to +90 degrees visible)
+    for (int deg = -90; deg <= 90; deg += 5) {
         int actual_deg = pitch_deg + deg;
         if (actual_deg < -90 || actual_deg > 90)
             continue;
 
-        int y = center_y - (deg / deg_per_pixel);
+        int y = center_y - (deg * pixels_per_deg);
 
         if (y >= 0 && y < height) {
             lv_point_t points[2];
@@ -517,16 +527,16 @@ void osd_head_tracker_altitude_draw(int16_t pitch_deg) {
             points[1].y = y;
 
             if (deg % 15 == 0) {
-                points[1].x = width / 2;
+                points[1].x = tick_width;
                 lv_canvas_draw_line(canvas, points, 2, &line_dsc);
 
                 // Draw degree label
                 char label[8];
                 snprintf(label, sizeof(label), "%d", actual_deg);
-                lv_point_t label_pos = {width / 2 + 2, y - 8};
-                lv_canvas_draw_text(canvas, label_pos.x, label_pos.y, 20, &label_dsc, label);
+                lv_point_t label_pos = {label_x, y - (is_fhd ? 8 : 6)};
+                lv_canvas_draw_text(canvas, label_pos.x, label_pos.y, is_fhd ? 40 : 28, &label_dsc, label);
             } else {
-                points[1].x = width / 3;
+                points[1].x = tick_width / 2;
                 lv_canvas_draw_line(canvas, points, 2, &line_dsc);
             }
         }
@@ -1062,14 +1072,29 @@ static void embedded_osd_init(uint8_t fhd) {
 
     // Initialize head tracker compass (horizontal at top)
     g_osd_hdzero.head_tracker_compass[fhd] = lv_canvas_create(so);
-    lv_obj_set_size(g_osd_hdzero.head_tracker_compass[fhd], fhd ? 450 : 300, fhd ? 60 : 40);
-    osd_object_set_pos(fhd, g_osd_hdzero.head_tracker_compass[fhd], &g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_COMPASS].position);
+    if (fhd) {
+        lv_canvas_set_buffer(g_osd_hdzero.head_tracker_compass[fhd], cbuf_compass_fhd, 1920, 60, LV_IMG_CF_TRUE_COLOR_ALPHA);
+    } else {
+        lv_canvas_set_buffer(g_osd_hdzero.head_tracker_compass[fhd], cbuf_compass_hd, 1280, 42, LV_IMG_CF_TRUE_COLOR_ALPHA);
+    }
+    lv_canvas_fill_bg(g_osd_hdzero.head_tracker_compass[fhd], lv_color_hex(0x000000), LV_OPA_TRANSP);
+    lv_obj_set_style_bg_opa(g_osd_hdzero.head_tracker_compass[fhd], LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(g_osd_hdzero.head_tracker_compass[fhd], 0, 0);
+    lv_obj_set_pos(g_osd_hdzero.head_tracker_compass[fhd], 0, 0); // Top left
     lv_obj_add_flag(g_osd_hdzero.head_tracker_compass[fhd], LV_OBJ_FLAG_HIDDEN);
 
     // Initialize head tracker altitude/pitch (vertical on right side)
     g_osd_hdzero.head_tracker_altitude[fhd] = lv_canvas_create(so);
-    lv_obj_set_size(g_osd_hdzero.head_tracker_altitude[fhd], fhd ? 60 : 40, fhd ? 300 : 200);
-    osd_object_set_pos(fhd, g_osd_hdzero.head_tracker_altitude[fhd], &g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_ALTITUDE].position);
+    if (fhd) {
+        lv_canvas_set_buffer(g_osd_hdzero.head_tracker_altitude[fhd], cbuf_altitude_fhd, 80, 1080, LV_IMG_CF_TRUE_COLOR_ALPHA);
+        lv_obj_set_pos(g_osd_hdzero.head_tracker_altitude[fhd], 1920 - 80, 0); // Right edge
+    } else {
+        lv_canvas_set_buffer(g_osd_hdzero.head_tracker_altitude[fhd], cbuf_altitude_hd, 55, 720, LV_IMG_CF_TRUE_COLOR_ALPHA);
+        lv_obj_set_pos(g_osd_hdzero.head_tracker_altitude[fhd], 1280 - 55, 0); // Right edge
+    }
+    lv_canvas_fill_bg(g_osd_hdzero.head_tracker_altitude[fhd], lv_color_hex(0x000000), LV_OPA_TRANSP);
+    lv_obj_set_style_bg_opa(g_osd_hdzero.head_tracker_altitude[fhd], LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(g_osd_hdzero.head_tracker_altitude[fhd], 0, 0);
     lv_obj_add_flag(g_osd_hdzero.head_tracker_altitude[fhd], LV_OBJ_FLAG_HIDDEN);
 }
 

@@ -12,6 +12,7 @@
 #include "core/settings.h"
 #include "lang/language.h"
 #include "ui/page_common.h"
+#include "ui/ui_porting.h"
 #include "ui/ui_style.h"
 
 // Current head tracker values for testing
@@ -21,10 +22,8 @@ static int16_t test_pitch = 0;
 static lv_obj_t *label_heading;
 static lv_obj_t *label_pitch;
 static lv_obj_t *label_controls;
+static lv_obj_t *fullscreen_overlay;
 static lv_timer_t *timer;
-
-static lv_coord_t col_dsc[] = {160, 160, 160, 160, 160, 160, 160, 160, LV_GRID_TEMPLATE_LAST};
-static lv_coord_t row_dsc[] = {60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, LV_GRID_TEMPLATE_LAST};
 
 static lv_obj_t *page_osd_test_create(lv_obj_t *parent, panel_arr_t *arr) {
     lv_obj_t *page = lv_menu_page_create(parent, NULL);
@@ -39,55 +38,30 @@ static lv_obj_t *page_osd_test_create(lv_obj_t *parent, panel_arr_t *arr) {
 
     create_text(NULL, section, false, _lang("Head Tracker OSD Test"), LV_MENU_ITEM_BUILDER_VARIANT_2);
 
+    // Create a simple container for instructions
     lv_obj_t *cont = lv_obj_create(section);
     lv_obj_set_size(cont, 1280, 500);
     lv_obj_set_pos(cont, 0, 60);
-    lv_obj_set_layout(cont, LV_LAYOUT_GRID);
     lv_obj_clear_flag(cont, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_style(cont, &style_context, LV_PART_MAIN);
 
-    lv_obj_set_style_grid_column_dsc_array(cont, col_dsc, 0);
-    lv_obj_set_style_grid_row_dsc_array(cont, row_dsc, 0);
-
-    // Instructions
-    lv_obj_t *label_title = lv_label_create(cont);
-    lv_label_set_text(label_title, "OSD Test Mode - No Video Signal");
-    lv_obj_set_style_text_font(label_title, &lv_font_montserrat_26, 0);
-    lv_obj_set_style_text_align(label_title, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_color(label_title, lv_color_make(255, 255, 255), 0);
-    lv_obj_set_grid_cell(label_title, LV_GRID_ALIGN_CENTER, 0, 8, LV_GRID_ALIGN_CENTER, 0, 1);
-
-    // Current values display
-    label_heading = lv_label_create(cont);
-    lv_label_set_text_fmt(label_heading, "Heading: %d°", test_heading);
-    lv_obj_set_style_text_font(label_heading, &lv_font_montserrat_26, 0);
-    lv_obj_set_style_text_color(label_heading, lv_color_make(0, 255, 0), 0);
-    lv_obj_set_grid_cell(label_heading, LV_GRID_ALIGN_CENTER, 0, 4, LV_GRID_ALIGN_CENTER, 2, 1);
-
-    label_pitch = lv_label_create(cont);
-    lv_label_set_text_fmt(label_pitch, "Pitch: %d°", test_pitch);
-    lv_obj_set_style_text_font(label_pitch, &lv_font_montserrat_26, 0);
-    lv_obj_set_style_text_color(label_pitch, lv_color_make(0, 255, 0), 0);
-    lv_obj_set_grid_cell(label_pitch, LV_GRID_ALIGN_CENTER, 4, 4, LV_GRID_ALIGN_CENTER, 2, 1);
-
-    // Controls help text
-    label_controls = lv_label_create(cont);
-    lv_label_set_text(label_controls,
+    // Instructions label
+    lv_obj_t *instructions = lv_label_create(cont);
+    lv_label_set_text(instructions,
+                      "OSD Test Mode\n\n"
+                      "When you enter this page, a full-screen gray overlay\n"
+                      "will appear to simulate the FPV video feed.\n\n"
                       "Head Tracker Status:\n"
-                      "  If HT is enabled in settings, real values shown\n"
-                      "  If HT is disabled, use keyboard controls\n\n"
-                      "Keyboard Controls (when HT disabled):\n\n"
-                      "Arrow Keys:\n"
-                      "  LEFT/RIGHT: Adjust Heading (±5°)\n"
-                      "  UP/DOWN: Adjust Pitch (±5°)\n\n"
-                      "Fine Control:\n"
-                      "  J/L: Heading (±1°)\n"
-                      "  I/K: Pitch (±1°)\n\n"
-                      "Number Keys: Cardinal Directions\n"
-                      "R: Reset to 0°/0°");
-    lv_obj_set_style_text_font(label_controls, &lv_font_montserrat_16, 0);
-    lv_obj_set_style_text_color(label_controls, lv_color_make(200, 200, 200), 0);
-    lv_obj_set_grid_cell(label_controls, LV_GRID_ALIGN_START, 0, 8, LV_GRID_ALIGN_START, 4, 6);
+                      "  • If HT is enabled, real values shown\n"
+                      "  • If HT is disabled, use keyboard controls\n\n"
+                      "Keyboard Controls (when HT disabled):\n"
+                      "  Arrow Keys: LEFT/RIGHT (±5° heading), UP/DOWN (±5° pitch)\n"
+                      "  Fine Control: J/L (±1° heading), I/K (±1° pitch)\n"
+                      "  Number Keys: Cardinal directions\n"
+                      "  R: Reset to 0°/0°");
+    lv_obj_set_style_text_font(instructions, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_color(instructions, lv_color_make(200, 200, 200), 0);
+    lv_obj_set_pos(instructions, 20, 20);
 
     return page;
 }
@@ -230,6 +204,37 @@ static void page_osd_test_timer(struct _lv_timer_t *timer) {
 static void page_osd_test_enter() {
     LOGD("page_osd_test_enter");
 
+    // Create full-screen overlay to simulate FPV video feed
+    // Create it on scr_main at position 0,0 with full screen size
+    lv_obj_t *scr = lv_scr_act();
+    fullscreen_overlay = lv_obj_create(scr);
+
+    // Use display resolution (720p for goggle2)
+    lv_obj_set_size(fullscreen_overlay, DISP_HOR_RES_HD, DISP_VER_RES_HD);
+    lv_obj_set_pos(fullscreen_overlay, 0, 0);
+    lv_obj_clear_flag(fullscreen_overlay, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(fullscreen_overlay, lv_color_make(128, 128, 128), 0);
+    lv_obj_set_style_bg_opa(fullscreen_overlay, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(fullscreen_overlay, 0, 0);
+    lv_obj_set_style_pad_all(fullscreen_overlay, 0, 0);
+    lv_obj_set_style_radius(fullscreen_overlay, 0, 0);
+
+    // Move to index 0 (bottom of z-order) so OSD elements appear on top
+    lv_obj_move_to_index(fullscreen_overlay, 0);
+
+    // Create labels on the overlay for current values
+    label_heading = lv_label_create(fullscreen_overlay);
+    lv_label_set_text_fmt(label_heading, "Heading: %d°", test_heading);
+    lv_obj_set_style_text_font(label_heading, &lv_font_montserrat_26, 0);
+    lv_obj_set_style_text_color(label_heading, lv_color_make(255, 255, 0), 0);
+    lv_obj_set_pos(label_heading, 20, 20);
+
+    label_pitch = lv_label_create(fullscreen_overlay);
+    lv_label_set_text_fmt(label_pitch, "Pitch: %d°", test_pitch);
+    lv_obj_set_style_text_font(label_pitch, &lv_font_montserrat_26, 0);
+    lv_obj_set_style_text_color(label_pitch, lv_color_make(255, 255, 0), 0);
+    lv_obj_set_pos(label_pitch, 20, 60);
+
     // Enable OSD elements for testing
     g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_COMPASS].show = true;
     g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_ALTITUDE].show = true;
@@ -239,10 +244,22 @@ static void page_osd_test_enter() {
 
     // Create update timer (20 FPS)
     timer = lv_timer_create(page_osd_test_timer, 50, NULL);
+
+    // Force initial draw
+    osd_head_tracker_compass_draw(test_heading);
+    osd_head_tracker_altitude_draw(test_pitch);
 }
 
 static void page_osd_test_exit() {
     LOGD("page_osd_test_exit");
+
+    // Hide and clear OSD elements on exit FIRST
+    g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_COMPASS].show = false;
+    g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_ALTITUDE].show = false;
+
+    // Force a redraw with elements hidden to clear the screen
+    osd_head_tracker_compass_draw(0);
+    osd_head_tracker_altitude_draw(0);
 
     // Clean up timer
     if (timer) {
@@ -250,9 +267,15 @@ static void page_osd_test_exit() {
         timer = NULL;
     }
 
-    // Optionally hide OSD elements on exit
-    // g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_COMPASS].show = false;
-    // g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_ALTITUDE].show = false;
+    // Delete the fullscreen overlay and invalidate
+    if (fullscreen_overlay) {
+        lv_obj_del(fullscreen_overlay);
+        fullscreen_overlay = NULL;
+    }
+
+    // Reset label pointers
+    label_heading = NULL;
+    label_pitch = NULL;
 }
 
 page_pack_t pp_osd_test = {

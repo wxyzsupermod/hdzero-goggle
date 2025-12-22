@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,14 +34,11 @@ struct fb_var_screeninfo {
     uint32_t xoffset;
     uint32_t yoffset;
     uint32_t bits_per_pixel;
-    uint32_t reserved[4];
+    // Add other fields as needed
 };
-
-// Stub ioctl commands
-#define FBIOGET_VSCREENINFO 0x4600
-#define FBIOGET_FSCREENINFO 0x4601
-#define FBIOPAN_DISPLAY     0x4606
 #endif
+
+#include <stdint.h>
 #include <stdio.h>
 
 // a framebuffer device structure;

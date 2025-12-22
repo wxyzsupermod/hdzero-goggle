@@ -242,19 +242,6 @@ void ht_init() {
     ht_data.gyr_offset[1] = g_setting.ht.gyr_y;
     ht_data.gyr_offset[2] = g_setting.ht.gyr_z;
 
-    // Initialize antenna tracker data
-    ht_data.antenna_tracker.is_calibrated = false;
-    ht_data.antenna_tracker.origin_latitude = 0.0;
-    ht_data.antenna_tracker.origin_longitude = 0.0;
-    ht_data.antenna_tracker.origin_altitude = 0.0;
-    ht_data.antenna_tracker.pan_offset = 0.0;
-    ht_data.antenna_tracker.tilt_offset = 0.0;
-
-    ht_data.gps_data.latitude = 0.0;
-    ht_data.gps_data.longitude = 0.0;
-    ht_data.gps_data.altitude = 0.0;
-    ht_data.gps_data.valid = false;
-
 #ifndef EMULATOR_BUILD
     // start timer (not supported in emulator)
     timer_t timerId = 0;
@@ -415,14 +402,6 @@ int16_t *ht_get_channels() {
     return ht_data.htChannels;
 }
 
-float ht_get_pan_angle() {
-    return ht_data.panAngle;
-}
-
-float ht_get_tilt_angle() {
-    return ht_data.tiltAngle;
-}
-
 void head_alarm_init() {
     pthread_create(&head_alarm_handle, NULL, head_alarm_thread, NULL);
 }
@@ -459,7 +438,14 @@ void *head_alarm_thread(void *arg) {
 ///////////////////////////////////////////////////////////////////////////////
 // Antenna Tracker Functions
 
-// Update GPS data from Betaflight OSD
+float ht_get_pan_angle() {
+    return ht_data.panAngle;
+}
+
+float ht_get_tilt_angle() {
+    return ht_data.tiltAngle;
+}
+
 void ht_antenna_tracker_update_gps(double latitude, double longitude, float altitude, bool valid) {
     ht_data.gps_data.latitude = latitude;
     ht_data.gps_data.longitude = longitude;
@@ -467,35 +453,30 @@ void ht_antenna_tracker_update_gps(double latitude, double longitude, float alti
     ht_data.gps_data.valid = valid;
 }
 
-// Calibrate antenna tracker - capture current drone position and head angles
 void ht_antenna_tracker_calibrate() {
     if (!ht_data.gps_data.valid) {
-        LOGW("Antenna tracker calibration failed: No valid GPS data");
+        LOGW("Cannot calibrate antenna tracker: GPS data not valid");
         return;
     }
 
-    // Store drone origin position (where user is pointing)
+    // Store the origin (home) position
     ht_data.antenna_tracker.origin_latitude = ht_data.gps_data.latitude;
     ht_data.antenna_tracker.origin_longitude = ht_data.gps_data.longitude;
     ht_data.antenna_tracker.origin_altitude = ht_data.gps_data.altitude;
 
-    // Store current head tracker angles as offset
+    // Store current head tracker angles as offsets
     ht_data.antenna_tracker.pan_offset = ht_data.panAngle;
     ht_data.antenna_tracker.tilt_offset = ht_data.tiltAngle;
 
     ht_data.antenna_tracker.is_calibrated = true;
-
-    LOGI("Antenna tracker calibrated:");
-    LOGI("  Origin: %.6f, %.6f, %.1fm",
+    LOGI("Antenna tracker calibrated at origin: lat=%.6f, lon=%.6f, alt=%.1fm, pan_offset=%.1f, tilt_offset=%.1f",
          ht_data.antenna_tracker.origin_latitude,
          ht_data.antenna_tracker.origin_longitude,
-         ht_data.antenna_tracker.origin_altitude);
-    LOGI("  Offsets: Pan=%.1f° Tilt=%.1f°",
+         ht_data.antenna_tracker.origin_altitude,
          ht_data.antenna_tracker.pan_offset,
          ht_data.antenna_tracker.tilt_offset);
 }
 
-// Check if antenna tracker is calibrated
 bool ht_antenna_tracker_is_calibrated() {
     return ht_data.antenna_tracker.is_calibrated;
 }
