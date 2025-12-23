@@ -454,6 +454,10 @@ void ht_antenna_tracker_update_gps(double latitude, double longitude, float alti
     ht_data.gps_data.valid = valid;
 }
 
+bool ht_antenna_tracker_is_gps_valid() {
+    return ht_data.gps_data.valid;
+}
+
 void ht_antenna_tracker_calibrate() {
     if (!ht_data.gps_data.valid) {
         LOGW("Cannot calibrate antenna tracker: GPS data not valid");

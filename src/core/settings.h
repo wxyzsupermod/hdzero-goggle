@@ -128,6 +128,8 @@ typedef struct {
     setting_ht_alarm_pattern_t alarm_pattern;
     bool alarm_on_arm;
     bool alarm_on_video;
+    bool pan_invert;
+    bool tilt_invert;
 } setting_head_tracker_t;
 
 typedef struct {

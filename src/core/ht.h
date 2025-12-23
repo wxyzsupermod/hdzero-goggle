@@ -94,6 +94,7 @@ void head_alarm_init();
 // Antenna tracker functions
 void ht_antenna_tracker_calibrate();
 void ht_antenna_tracker_update_gps(double latitude, double longitude, float altitude, bool valid);
+bool ht_antenna_tracker_is_gps_valid();
 bool ht_antenna_tracker_is_calibrated();
 void ht_antenna_tracker_test_calibrate();
 float ht_get_drone_azimuth();

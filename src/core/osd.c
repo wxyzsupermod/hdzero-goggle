@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <log/log.h>
@@ -1034,8 +1035,16 @@ void osd_hdzero_update(void) {
     }
 
     // Update head tracker OSD elements with actual head tracker data
+    // Apply inversion based on user settings
     int16_t heading_deg = (int16_t)ht_get_pan_angle();
     int16_t pitch_deg = (int16_t)ht_get_tilt_angle();
+    
+    if (g_setting.ht.pan_invert) {
+        heading_deg = -heading_deg;
+    }
+    if (g_setting.ht.tilt_invert) {
+        pitch_deg = -pitch_deg;
+    }
 
     osd_head_tracker_compass_draw(heading_deg);
     osd_head_tracker_altitude_draw(pitch_deg);
@@ -1444,48 +1453,172 @@ void osd_signal_update() {
 }
 
 // Parse GPS coordinates from Betaflight OSD text
-// When armed, we capture the home position coordinates as displayed in the OSD
+// Scans OSD buffer for GPS LAT/LON symbols and parses the displayed coordinate text
 void osd_parse_gps_data() {
-    // GPS coordinates in Betaflight OSD are displayed in special character format
-    // For simplicity, we'll scan for numeric patterns that resemble coordinates
-    // Format typically: latitude (XX.XXXXXX) and longitude (XXX.XXXXXX)
+// Betaflight OSD symbol codes
+#define SYM_LAT      0x89
+#define SYM_LON      0x98
+#define SYM_ALTITUDE 0x7F
+#define SYM_M        0x0C
+#define SYM_FT       0x0F
 
-    char line_text[HD_HMAX + 1];
     static double gps_lat = 0.0;
     static double gps_lon = 0.0;
     static float gps_alt = 0.0;
-    bool coords_found = false;
+    static bool gps_valid = false;
+    bool lat_found = false;
+    bool lon_found = false;
+    bool alt_found = false;
 
+    // Scan OSD buffer for GPS coordinate symbols
     for (int row = 0; row < HD_VMAX; row++) {
-        // Extract ASCII text from this row
-        int text_len = 0;
-        for (int col = 0; col < HD_HMAX; col++) {
+        for (int col = 0; col < HD_HMAX - 1; col++) {
             uint16_t ch = fc_osd[row][col];
-            // Convert OSD character codes to ASCII
-            if (ch >= 0x20 && ch < 0x80) {
-                line_text[text_len++] = (char)ch;
-            } else {
-                line_text[text_len++] = ' ';
+
+            // Look for latitude symbol (0x89)
+            if (ch == SYM_LAT && col < HD_HMAX - 10) {
+                // Parse latitude text after symbol
+                // Format: 0x89 followed by ASCII text like " -12.3456789" or " 12.3456789"
+                char lat_text[20];
+                int text_pos = 0;
+                bool parsing = true;
+
+                for (int i = col + 1; i < col + 15 && i < HD_HMAX && parsing; i++) {
+                    uint16_t c = fc_osd[row][i];
+                    if (c >= 0x20 && c <= 0x7E) { // ASCII printable
+                        char ascii = (char)c;
+                        // Accept digits, decimal point, minus sign, and space
+                        if ((ascii >= '0' && ascii <= '9') || ascii == '.' || ascii == '-' || ascii == ' ') {
+                            if (text_pos < sizeof(lat_text) - 1) {
+                                lat_text[text_pos++] = ascii;
+                            }
+                        } else {
+                            parsing = false; // Stop at first non-numeric character
+                        }
+                    } else {
+                        parsing = false; // Stop at special characters
+                    }
+                }
+                lat_text[text_pos] = '\0';
+
+                // Parse the numeric string
+                if (text_pos > 0) {
+                    double parsed_lat = atof(lat_text);
+                    if (parsed_lat >= -90.0 && parsed_lat <= 90.0) {
+                        gps_lat = parsed_lat;
+                        lat_found = true;
+                    }
+                }
             }
-        }
-        line_text[text_len] = '\0';
 
-        // Look for GPS home icon/text and coordinates
-        // Betaflight shows home as special symbol followed by distance/direction
-        // For step 3: We'll assume GPS is valid if we detect any GPS-related text
-        if (strstr(line_text, "GPS") != NULL ||
-            strstr(line_text, "SAT") != NULL ||
-            strstr(line_text, "HOME") != NULL) {
-            coords_found = true;
+            // Look for longitude symbol (0x98)
+            if (ch == SYM_LON && col < HD_HMAX - 10) {
+                // Parse longitude text after symbol
+                char lon_text[20];
+                int text_pos = 0;
+                bool parsing = true;
 
-            // TODO: Parse actual lat/lon from OSD when displayed
-            // For now, we'll get coordinates when armed (home position set)
+                for (int i = col + 1; i < col + 15 && i < HD_HMAX && parsing; i++) {
+                    uint16_t c = fc_osd[row][i];
+                    if (c >= 0x20 && c <= 0x7E) { // ASCII printable
+                        char ascii = (char)c;
+                        if ((ascii >= '0' && ascii <= '9') || ascii == '.' || ascii == '-' || ascii == ' ') {
+                            if (text_pos < sizeof(lon_text) - 1) {
+                                lon_text[text_pos++] = ascii;
+                            }
+                        } else {
+                            parsing = false;
+                        }
+                    } else {
+                        parsing = false;
+                    }
+                }
+                lon_text[text_pos] = '\0';
+
+                if (text_pos > 0) {
+                    double parsed_lon = atof(lon_text);
+                    if (parsed_lon >= -180.0 && parsed_lon <= 180.0) {
+                        gps_lon = parsed_lon;
+                        lon_found = true;
+                    }
+                }
+            }
+
+            // Look for altitude symbol (0x7F)
+            if (ch == SYM_ALTITUDE && col < HD_HMAX - 8) {
+                // Parse altitude text
+                char alt_text[15];
+                int text_pos = 0;
+                bool parsing = true;
+
+                for (int i = col + 1; i < col + 12 && i < HD_HMAX && parsing; i++) {
+                    uint16_t c = fc_osd[row][i];
+                    if (c >= 0x20 && c <= 0x7E) {
+                        char ascii = (char)c;
+                        if ((ascii >= '0' && ascii <= '9') || ascii == '.' || ascii == '-' || ascii == ' ') {
+                            if (text_pos < sizeof(alt_text) - 1) {
+                                alt_text[text_pos++] = ascii;
+                            }
+                        } else {
+                            // Check if it's a unit symbol (M or FT)
+                            if (c == SYM_M || c == SYM_FT) {
+                                // Convert feet to meters if needed
+                                float alt = atof(alt_text);
+                                if (c == SYM_FT) {
+                                    alt *= 0.3048f; // Convert feet to meters
+                                }
+                                if (alt >= -500.0f && alt <= 10000.0f) { // Reasonable altitude range
+                                    gps_alt = alt;
+                                    alt_found = true;
+                                }
+                            }
+                            parsing = false;
+                        }
+                    } else {
+                        parsing = false;
+                    }
+                }
+            }
         }
     }
 
-    // Update GPS validity - coordinates will be captured on arm
-    if (coords_found) {
+    // Update GPS data if we found valid coordinates
+    if (lat_found && lon_found) {
+        gps_valid = true;
         ht_antenna_tracker_update_gps(gps_lat, gps_lon, gps_alt, true);
+
+        // Log when coordinates change significantly (for debugging)
+        static double last_lat = 0.0;
+        static double last_lon = 0.0;
+        if (fabs(gps_lat - last_lat) > 0.00001 || fabs(gps_lon - last_lon) > 0.00001) {
+            LOGI("GPS coords parsed from OSD: LAT=%.7f LON=%.7f ALT=%.1fm", gps_lat, gps_lon, gps_alt);
+
+            // Write to SD card log file for debugging
+            FILE *fp = fopen("/mnt/extsd/gps_debug.log", "a");
+            if (fp) {
+                time_t now = time(NULL);
+                struct tm *t = localtime(&now);
+                fprintf(fp, "[%02d:%02d:%02d] GPS coords parsed from OSD: LAT=%.7f LON=%.7f ALT=%.1fm\n",
+                        t->tm_hour, t->tm_min, t->tm_sec, gps_lat, gps_lon, gps_alt);
+                fclose(fp);
+            }
+
+            last_lat = gps_lat;
+            last_lon = gps_lon;
+        }
+    } else if (gps_valid) {
+        // Lost GPS fix - mark as invalid
+        gps_valid = false;
+        ht_antenna_tracker_update_gps(gps_lat, gps_lon, gps_alt, false);
+
+        // Log GPS loss to SD card
+        FILE *fp = fopen("/mnt/extsd/gps_debug.log", "a");
+        if (fp) {
+            time_t now = time(NULL);
+            struct tm *t = localtime(&now);
+            fprintf(fp, "[%02d:%02d:%02d] GPS fix lost\n", t->tm_hour, t->tm_min, t->tm_sec);
+            fclose(fp);
+        }
     }
 }
 
@@ -1542,24 +1675,23 @@ void *thread_osd(void *ptr) {
             }
         }
 
-        // Parse GPS and detect armed state for antenna tracker auto-calibration
+        // Parse GPS coordinates from OSD first (updates GPS data)
         osd_parse_gps_data();
+
+        // Detect armed state
         bool is_armed = osd_detect_armed();
 
         // Auto-calibrate on arm (rising edge)
-        // When drone arms, it sets home position - perfect time to calibrate
+        // When drone arms, it has GPS fix and home position is set
         if (is_armed && !was_armed) {
-            LOGI("Drone armed - capturing home position for antenna tracker");
-
-            // Set GPS as the drone's current position (which becomes home on arm)
-            // Using placeholder coordinates for step 3
-            // In production, these would come from MSP_RAW_GPS or parsed from OSD
-            double home_lat = 37.7749; // Placeholder - San Francisco
-            double home_lon = -122.4194;
-            float home_alt = 0.0;
-
-            ht_antenna_tracker_update_gps(home_lat, home_lon, home_alt, true);
-            ht_antenna_tracker_calibrate();
+            // GPS coordinates have already been parsed by osd_parse_gps_data()
+            // Just trigger calibration with the current GPS data
+            if (ht_antenna_tracker_is_gps_valid()) {
+                LOGI("Drone armed - auto-calibrating antenna tracker with current GPS position");
+                ht_antenna_tracker_calibrate();
+            } else {
+                LOGW("Drone armed but no valid GPS fix - cannot auto-calibrate");
+            }
         }
         was_armed = is_armed;
     }

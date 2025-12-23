@@ -21,6 +21,8 @@ static btn_group_t page_select;
 static page_t curr_page = 0;
 
 static btn_group_t btn_group;
+static btn_group_t btn_group_pan_invert;
+static btn_group_t btn_group_tilt_invert;
 
 static lv_coord_t col_dsc[] = {UI_HT_COLS};
 static lv_coord_t row_dsc[] = {UI_HT_ROWS};
@@ -49,24 +51,34 @@ static void update_visibility(uint8_t page) {
         lv_obj_clear_state(label_test_cali, STATE_DISABLED);
         lv_obj_clear_state(label_center, STATE_DISABLED);
         slider_enable(&slider_group, true);
+        btn_group_enable(&btn_group_pan_invert, true);
+        btn_group_enable(&btn_group_tilt_invert, true);
 
         lv_obj_add_flag(pp_headtracker.p_arr.panel[1], FLAG_SELECTABLE);
         lv_obj_add_flag(pp_headtracker.p_arr.panel[2], FLAG_SELECTABLE);
         lv_obj_add_flag(pp_headtracker.p_arr.panel[3], FLAG_SELECTABLE);
         lv_obj_add_flag(pp_headtracker.p_arr.panel[4], FLAG_SELECTABLE);
         lv_obj_add_flag(pp_headtracker.p_arr.panel[5], FLAG_SELECTABLE);
+        lv_obj_add_flag(pp_headtracker.p_arr.panel[6], FLAG_SELECTABLE);
+        lv_obj_add_flag(pp_headtracker.p_arr.panel[7], FLAG_SELECTABLE);
+        lv_obj_add_flag(pp_headtracker.p_arr.panel[8], FLAG_SELECTABLE);
 
     } else if (page == PAGE1) {
         lv_obj_add_state(label_cali, STATE_DISABLED);
         lv_obj_add_state(label_test_cali, STATE_DISABLED);
         lv_obj_add_state(label_center, STATE_DISABLED);
         slider_enable(&slider_group, false);
+        btn_group_enable(&btn_group_pan_invert, false);
+        btn_group_enable(&btn_group_tilt_invert, false);
 
         lv_obj_add_flag(pp_headtracker.p_arr.panel[1], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[2], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[3], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[4], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[5], FLAG_SELECTABLE);
+        lv_obj_clear_flag(pp_headtracker.p_arr.panel[6], FLAG_SELECTABLE);
+        lv_obj_clear_flag(pp_headtracker.p_arr.panel[7], FLAG_SELECTABLE);
+        lv_obj_add_flag(pp_headtracker.p_arr.panel[8], FLAG_SELECTABLE);
     }
 
     if (g_setting.ht.enable && page == PAGE2) {
@@ -92,6 +104,10 @@ static void update_visibility(uint8_t page) {
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[2], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[3], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[4], FLAG_SELECTABLE);
+        lv_obj_clear_flag(pp_headtracker.p_arr.panel[5], FLAG_SELECTABLE);
+        lv_obj_clear_flag(pp_headtracker.p_arr.panel[6], FLAG_SELECTABLE);
+        lv_obj_clear_flag(pp_headtracker.p_arr.panel[7], FLAG_SELECTABLE);
+        lv_obj_clear_flag(pp_headtracker.p_arr.panel[8], FLAG_SELECTABLE);
     }
 
     // hiding and showing elements
@@ -99,6 +115,8 @@ static void update_visibility(uint8_t page) {
     case PAGE1:
         // show page 1
         btn_group_show(&btn_group, true);
+        btn_group_show(&btn_group_pan_invert, true);
+        btn_group_show(&btn_group_tilt_invert, true);
         slider_show(&slider_group, true);
         lv_obj_clear_flag(label_cali, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(label_test_cali, LV_OBJ_FLAG_HIDDEN);
@@ -113,6 +131,8 @@ static void update_visibility(uint8_t page) {
     case PAGE2:
         // hide page 1
         btn_group_show(&btn_group, false);
+        btn_group_show(&btn_group_pan_invert, false);
+        btn_group_show(&btn_group_tilt_invert, false);
         slider_show(&slider_group, false);
         lv_obj_add_flag(label_cali, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(label_test_cali, LV_OBJ_FLAG_HIDDEN);
@@ -189,14 +209,20 @@ static lv_obj_t *page_headtracker_create(lv_obj_t *parent, panel_arr_t *arr) {
     create_slider_item(&slider_group, cont, _lang("Max Angle"), 360, g_setting.ht.max_angle, 5);
     lv_slider_set_range(slider_group.slider, 0, 360);
 
-    snprintf(buf, sizeof(buf), "< %s", _lang("Back"));
-    create_label_item(cont, buf, 1, 5, 1);
+    create_btn_group_item(&btn_group_pan_invert, cont, 2, _lang("Pan Invert"), _lang("Off"), _lang("On"), "", "", 6);
+
+    create_btn_group_item(&btn_group_tilt_invert, cont, 2, _lang("Tilt Invert"), _lang("Off"), _lang("On"), "", "", 7);
 
     btn_group_set_sel(&btn_group, !g_setting.ht.enable);
     btn_group_set_sel(&alarm_state, g_setting.ht.alarm_state);
     btn_group_set_sel(&page_select, 0);
+    btn_group_set_sel(&btn_group_pan_invert, g_setting.ht.pan_invert ? 1 : 0);
+    btn_group_set_sel(&btn_group_tilt_invert, g_setting.ht.tilt_invert ? 1 : 0);
 
-    create_label_item(cont, _lang("Pan"), 1, 7, 1);
+    snprintf(buf, sizeof(buf), "< %s", _lang("Back"));
+    create_label_item(cont, buf, 1, 8, 1);
+
+    create_label_item(cont, _lang("Pan"), 1, 9, 1);
     pan = lv_bar_create(cont);
     lv_bar_set_range(pan, 1000, 2000);
     lv_obj_set_size(pan, UI_HT_CALIBRATION_SIZE);
@@ -211,9 +237,9 @@ static lv_obj_t *page_headtracker_create(lv_obj_t *parent, panel_arr_t *arr) {
 #endif
     lv_obj_set_style_radius(pan, 0, LV_PART_INDICATOR);
     lv_obj_set_grid_cell(pan, LV_GRID_ALIGN_START, 2, 1,
-                         LV_GRID_ALIGN_CENTER, 7, 1);
+                         LV_GRID_ALIGN_CENTER, 9, 1);
 
-    create_label_item(cont, _lang("Tilt"), 1, 8, 1);
+    create_label_item(cont, _lang("Tilt"), 1, 10, 1);
     tilt = lv_bar_create(cont);
     lv_bar_set_range(tilt, 1000, 2000);
     lv_obj_set_size(tilt, UI_HT_CALIBRATION_SIZE);
@@ -228,9 +254,9 @@ static lv_obj_t *page_headtracker_create(lv_obj_t *parent, panel_arr_t *arr) {
 #endif
     lv_obj_set_style_radius(tilt, 0, LV_PART_INDICATOR);
     lv_obj_set_grid_cell(tilt, LV_GRID_ALIGN_START, 2, 1,
-                         LV_GRID_ALIGN_CENTER, 8, 1);
+                         LV_GRID_ALIGN_CENTER, 10, 1);
 
-    create_label_item(cont, _lang("Roll"), 1, 9, 1);
+    create_label_item(cont, _lang("Roll"), 1, 11, 1);
     roll = lv_bar_create(cont);
     lv_bar_set_range(roll, 1000, 2000);
     lv_obj_set_size(roll, UI_HT_CALIBRATION_SIZE);
@@ -245,7 +271,7 @@ static lv_obj_t *page_headtracker_create(lv_obj_t *parent, panel_arr_t *arr) {
 #endif
     lv_obj_set_style_radius(roll, 0, LV_PART_INDICATOR);
     lv_obj_set_grid_cell(roll, LV_GRID_ALIGN_START, 2, 1,
-                         LV_GRID_ALIGN_CENTER, 9, 1);
+                         LV_GRID_ALIGN_CENTER, 11, 1);
 
     curr_page = PAGE1;
     update_visibility(curr_page);
@@ -349,6 +375,17 @@ static void page_headtracker_on_click_page1(uint8_t key, int sel) {
             lv_obj_add_style(slider_group.slider, &style_silder_select, LV_PART_MAIN);
             angle_slider_selected = true;
         }
+    } else if (sel == 6) {
+        btn_group_toggle_sel(&btn_group_pan_invert);
+        g_setting.ht.pan_invert = btn_group_get_sel(&btn_group_pan_invert) == 1;
+        settings_put_bool("ht", "pan_invert", g_setting.ht.pan_invert);
+    } else if (sel == 7) {
+        btn_group_toggle_sel(&btn_group_tilt_invert);
+        g_setting.ht.tilt_invert = btn_group_get_sel(&btn_group_tilt_invert) == 1;
+        settings_put_bool("ht", "tilt_invert", g_setting.ht.tilt_invert);
+    } else if (sel == 8) {
+        // Back button - handled by common navigation
+        return;
     }
 }
 
@@ -419,7 +456,7 @@ static void page_headtracker_exit() {
 page_pack_t pp_headtracker = {
     .p_arr = {
         .cur = 0,
-        .max = 6,
+        .max = 9,
     },
     .name = "Head Tracker",
     .create = page_headtracker_create,
