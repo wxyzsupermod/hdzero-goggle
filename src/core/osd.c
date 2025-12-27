@@ -57,6 +57,7 @@ typedef enum {
 static sem_t osd_semaphore;
 static osd_resource_t is_fhd;
 static fc_variant_t g_fc_variant_type = FC_VARIANT_UNKNOWN;
+static bool reset_armed_state = false; // Flag to reset armed state detection
 
 static uint16_t osd_buf_shadow[HD_VMAX][HD_HMAX];
 static char clock_date[32] = {"2023/08/10"},
@@ -493,6 +494,12 @@ void osd_head_tracker_compass_draw(int16_t heading_deg) {
 
         // Calculate x position for drone indicator
         int drone_x = center_x + (int)(angle_diff * pixels_per_deg);
+
+        static int debug_counter = 0;
+        if (++debug_counter % 30 == 0) { // Log every 30 frames (~1 second)
+            LOGD("Drone indicator: azimuth=%.1f°, heading=%.1f°, diff=%.1f°, x=%d (visible: %d-%d)",
+                 drone_azimuth, (float)heading_deg, angle_diff, drone_x, tri_size, width - tri_size);
+        }
 
         // Only draw if within visible range
         if (drone_x >= tri_size && drone_x < width - tri_size) {
@@ -1038,12 +1045,26 @@ void osd_hdzero_update(void) {
     // Apply inversion based on user settings
     int16_t heading_deg = (int16_t)ht_get_pan_angle();
     int16_t pitch_deg = (int16_t)ht_get_tilt_angle();
-    
+
     if (g_setting.ht.pan_invert) {
         heading_deg = -heading_deg;
     }
     if (g_setting.ht.tilt_invert) {
         pitch_deg = -pitch_deg;
+    }
+
+    // Calibration instruction text is now updated in OSD thread (osd_embedded_thread)
+    // for proper synchronization with arm_count changes
+
+    // If calibrated, apply offset so compass shows 0° at calibrated heading
+    if (ht_antenna_tracker_is_calibrated()) {
+        float pan_offset = ht_get_pan_offset();
+        heading_deg = (int16_t)(heading_deg - pan_offset);
+        // Normalize to -180 to +180 range
+        while (heading_deg > 180)
+            heading_deg -= 360;
+        while (heading_deg < -180)
+            heading_deg += 360;
     }
 
     osd_head_tracker_compass_draw(heading_deg);
@@ -1160,6 +1181,22 @@ static void embedded_osd_init(uint8_t fhd) {
     lv_obj_set_style_bg_opa(g_osd_hdzero.head_tracker_altitude[fhd], LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(g_osd_hdzero.head_tracker_altitude[fhd], 0, 0);
     lv_obj_add_flag(g_osd_hdzero.head_tracker_altitude[fhd], LV_OBJ_FLAG_HIDDEN);
+
+    // Create calibration instruction label (centered on screen)
+    g_osd_hdzero.calibration_instruction[fhd] = lv_label_create(so);
+    lv_label_set_text(g_osd_hdzero.calibration_instruction[fhd], "");
+    lv_obj_set_style_text_color(g_osd_hdzero.calibration_instruction[fhd], lv_color_make(0, 255, 0), 0);
+    lv_obj_set_style_bg_color(g_osd_hdzero.calibration_instruction[fhd], lv_color_hex(0x000000), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(g_osd_hdzero.calibration_instruction[fhd], LV_OPA_80, LV_PART_MAIN);
+    lv_obj_set_style_pad_all(g_osd_hdzero.calibration_instruction[fhd], 10, 0);
+    if (fhd) {
+        lv_obj_set_style_text_font(g_osd_hdzero.calibration_instruction[fhd], &conthrax_26, 0);
+        lv_obj_set_pos(g_osd_hdzero.calibration_instruction[fhd], 1920 / 2 - 200, 1080 / 2 - 20);
+    } else {
+        lv_obj_set_style_text_font(g_osd_hdzero.calibration_instruction[fhd], &conthrax_26, 0);
+        lv_obj_set_pos(g_osd_hdzero.calibration_instruction[fhd], 1280 / 2 - 200, 720 / 2 - 20);
+    }
+    lv_obj_add_flag(g_osd_hdzero.calibration_instruction[fhd], LV_OBJ_FLAG_HIDDEN);
 }
 
 void osd_update_element_positions() {
@@ -1452,6 +1489,12 @@ void osd_signal_update() {
     sem_post(&osd_semaphore);
 }
 
+// Reset armed state detection (call after calibration reset)
+void osd_reset_armed_state() {
+    reset_armed_state = true;
+    LOGI("OSD armed state detection will be reset");
+}
+
 // Parse GPS coordinates from Betaflight OSD text
 // Scans OSD buffer for GPS LAT/LON symbols and parses the displayed coordinate text
 void osd_parse_gps_data() {
@@ -1461,6 +1504,11 @@ void osd_parse_gps_data() {
 #define SYM_ALTITUDE 0x7F
 #define SYM_M        0x0C
 #define SYM_FT       0x0F
+
+// Betaflight armed state detection
+// Look for the absence of "DISARMED" text in the OSD
+// When armed, the DISARMED element disappears from the OSD
+#define DISARMED_TEXT "DISARMED"
 
     static double gps_lat = 0.0;
     static double gps_lon = 0.0;
@@ -1623,29 +1671,33 @@ void osd_parse_gps_data() {
 }
 
 // Detect if drone is armed by scanning OSD for armed indicator
+// Betaflight displays "ARMED" in center of screen when arming (lasts ~0.5 seconds)
 bool osd_detect_armed() {
-    char line_text[HD_HMAX + 1];
+    bool armed_text_found = false;
 
-    // Scan OSD for "ARMED" text or armed symbol
+    // Scan OSD for "ARMED" text (full word only, not "ARM" or "DISARMED")
     for (int row = 0; row < HD_VMAX; row++) {
-        int text_len = 0;
-        for (int col = 0; col < HD_HMAX; col++) {
-            uint16_t ch = fc_osd[row][col];
-            if (ch >= 0x20 && ch < 0x80) {
-                line_text[text_len++] = (char)ch;
-            } else {
-                line_text[text_len++] = ' ';
+        for (int col = 0; col < HD_HMAX - 5; col++) { // Need at least 5 chars for "ARMED"
+            // Check for exact match of "ARMED"
+            if (fc_osd[row][col] == 'A' &&
+                fc_osd[row][col + 1] == 'R' &&
+                fc_osd[row][col + 2] == 'M' &&
+                fc_osd[row][col + 3] == 'E' &&
+                fc_osd[row][col + 4] == 'D') {
+
+                // Make sure it's not part of "DISARMED" by checking previous char
+                if (col == 0 || fc_osd[row][col - 1] != 'S') {
+                    armed_text_found = true;
+                    LOGD("ARMED text found at row %d, col %d", row, col);
+                    break;
+                }
             }
         }
-        line_text[text_len] = '\0';
-
-        // Check for "ARMED" or "ARM" text
-        if (strstr(line_text, "ARMED") != NULL || strstr(line_text, "ARM") != NULL) {
-            return true;
-        }
+        if (armed_text_found)
+            break;
     }
 
-    return false;
+    return armed_text_found;
 }
 
 void *thread_osd(void *ptr) {
@@ -1681,19 +1733,57 @@ void *thread_osd(void *ptr) {
         // Detect armed state
         bool is_armed = osd_detect_armed();
 
+        // Check if armed state should be reset (after calibration reset)
+        if (reset_armed_state) {
+            was_armed = is_armed; // Sync to current state
+            reset_armed_state = false;
+            LOGI("Armed state detection reset, current state: %s", is_armed ? "ARMED" : "DISARMED");
+        }
+
         // Auto-calibrate on arm (rising edge)
-        // When drone arms, it has GPS fix and home position is set
+        // Two-point calibration: first arm = user position, second arm = takeoff position
         if (is_armed && !was_armed) {
             // GPS coordinates have already been parsed by osd_parse_gps_data()
-            // Just trigger calibration with the current GPS data
+            // Trigger calibration event with the current GPS data
             if (ht_antenna_tracker_is_gps_valid()) {
-                LOGI("Drone armed - auto-calibrating antenna tracker with current GPS position");
-                ht_antenna_tracker_calibrate();
+                uint8_t arm_count = ht_antenna_tracker_get_arm_count();
+                LOGI("Drone armed (arm #%d) - triggering antenna tracker calibration step", arm_count + 1);
+                ht_antenna_tracker_on_arm_event();
             } else {
-                LOGW("Drone armed but no valid GPS fix - cannot auto-calibrate");
+                LOGW("Drone armed but no valid GPS fix - cannot calibrate");
             }
+        } else if (!is_armed && was_armed) {
+            LOGI("Drone disarmed");
         }
         was_armed = is_armed;
+
+        // Update calibration instruction text (must be in OSD thread for sync)
+        pthread_mutex_lock(&lvgl_mutex);
+        uint8_t arm_count = ht_antenna_tracker_get_arm_count();
+        bool gps_valid = ht_antenna_tracker_is_gps_valid();
+
+        if (g_setting.ht.enable && gps_valid) {
+            if (arm_count == 0) {
+                lv_label_set_text(g_osd_hdzero.calibration_instruction[0], "Arm at user position");
+                lv_label_set_text(g_osd_hdzero.calibration_instruction[1], "Arm at user position");
+                lv_obj_clear_flag(g_osd_hdzero.calibration_instruction[0], LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(g_osd_hdzero.calibration_instruction[1], LV_OBJ_FLAG_HIDDEN);
+            } else if (arm_count == 1) {
+                lv_label_set_text(g_osd_hdzero.calibration_instruction[0], "Arm at takeoff");
+                lv_label_set_text(g_osd_hdzero.calibration_instruction[1], "Arm at takeoff");
+                lv_obj_clear_flag(g_osd_hdzero.calibration_instruction[0], LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(g_osd_hdzero.calibration_instruction[1], LV_OBJ_FLAG_HIDDEN);
+            } else {
+                // Calibration complete, hide instruction
+                lv_obj_add_flag(g_osd_hdzero.calibration_instruction[0], LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_flag(g_osd_hdzero.calibration_instruction[1], LV_OBJ_FLAG_HIDDEN);
+            }
+        } else {
+            // Head tracker disabled or no GPS, hide instruction
+            lv_obj_add_flag(g_osd_hdzero.calibration_instruction[0], LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(g_osd_hdzero.calibration_instruction[1], LV_OBJ_FLAG_HIDDEN);
+        }
+        pthread_mutex_unlock(&lvgl_mutex);
     }
     return NULL;
 }

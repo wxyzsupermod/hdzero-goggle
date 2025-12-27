@@ -447,15 +447,29 @@ float ht_get_tilt_angle() {
     return ht_data.tiltAngle;
 }
 
+float ht_get_pan_offset() {
+    return ht_data.antenna_tracker.pan_offset;
+}
+
 void ht_antenna_tracker_update_gps(double latitude, double longitude, float altitude, bool valid) {
     ht_data.gps_data.latitude = latitude;
     ht_data.gps_data.longitude = longitude;
     ht_data.gps_data.altitude = altitude;
     ht_data.gps_data.valid = valid;
+    if (valid) {
+        ht_data.gps_data.last_update_time = time(NULL);
+    }
 }
 
 bool ht_antenna_tracker_is_gps_valid() {
-    return ht_data.gps_data.valid;
+    // GPS is valid if marked valid and updated within last 3 seconds
+    // This handles Betaflight OSD blanking during arm event
+    if (ht_data.gps_data.valid) {
+        time_t now = time(NULL);
+        time_t age = now - ht_data.gps_data.last_update_time;
+        return age <= 3; // GPS valid for 3 seconds after last update
+    }
+    return false;
 }
 
 void ht_antenna_tracker_calibrate() {
@@ -464,112 +478,280 @@ void ht_antenna_tracker_calibrate() {
         return;
     }
 
-    // Store the origin (home) position
-    ht_data.antenna_tracker.origin_latitude = ht_data.gps_data.latitude;
-    ht_data.antenna_tracker.origin_longitude = ht_data.gps_data.longitude;
-    ht_data.antenna_tracker.origin_altitude = ht_data.gps_data.altitude;
+    // This is now a simplified manual calibration - just sets user and takeoff to same position
+    // For proper calibration, use automatic two-arm method via ht_antenna_tracker_on_arm_event()
+    ht_data.antenna_tracker.user_latitude = ht_data.gps_data.latitude;
+    ht_data.antenna_tracker.user_longitude = ht_data.gps_data.longitude;
+    ht_data.antenna_tracker.user_altitude = ht_data.gps_data.altitude;
+
+    ht_data.antenna_tracker.takeoff_latitude = ht_data.gps_data.latitude;
+    ht_data.antenna_tracker.takeoff_longitude = ht_data.gps_data.longitude;
+    ht_data.antenna_tracker.takeoff_altitude = ht_data.gps_data.altitude;
 
     // Store current head tracker angles as offsets
     ht_data.antenna_tracker.pan_offset = ht_data.panAngle;
     ht_data.antenna_tracker.tilt_offset = ht_data.tiltAngle;
 
+    ht_data.antenna_tracker.arm_count = 2; // Mark as calibrated
     ht_data.antenna_tracker.is_calibrated = true;
-    LOGI("Antenna tracker calibrated at origin: lat=%.6f, lon=%.6f, alt=%.1fm, pan_offset=%.1f, tilt_offset=%.1f",
-         ht_data.antenna_tracker.origin_latitude,
-         ht_data.antenna_tracker.origin_longitude,
-         ht_data.antenna_tracker.origin_altitude,
-         ht_data.antenna_tracker.pan_offset,
-         ht_data.antenna_tracker.tilt_offset);
+    ht_data.antenna_tracker.legacy_mode = true; // Single-point mode
+
+    LOGI("Antenna tracker manual calibration (legacy mode): lat=%.6f, lon=%.6f, alt=%.1fm",
+         ht_data.antenna_tracker.user_latitude,
+         ht_data.antenna_tracker.user_longitude,
+         ht_data.antenna_tracker.user_altitude);
 }
 
 bool ht_antenna_tracker_is_calibrated() {
     return ht_data.antenna_tracker.is_calibrated;
 }
 
+// Calculate great-circle distance between two GPS points in meters
+double ht_calculate_distance(double lat1, double lon1, double lat2, double lon2) {
+    double lat1_rad = lat1 * DEG_TO_RAD;
+    double lon1_rad = lon1 * DEG_TO_RAD;
+    double lat2_rad = lat2 * DEG_TO_RAD;
+    double lon2_rad = lon2 * DEG_TO_RAD;
+
+    double dlat = lat2_rad - lat1_rad;
+    double dlon = lon2_rad - lon1_rad;
+
+    double a = sin(dlat / 2) * sin(dlat / 2) +
+               cos(lat1_rad) * cos(lat2_rad) *
+                   sin(dlon / 2) * sin(dlon / 2);
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+    return 6371000.0 * c; // Earth radius in meters
+}
+
+// Calculate angle at user position between user→point_a and user→point_b
+// Returns angle in degrees (-180 to 180)
+// Positive = counter-clockwise from reference line, Negative = clockwise
+float ht_calculate_angle_at_user(double user_lat, double user_lon,
+                                 double point_a_lat, double point_a_lon,
+                                 double point_b_lat, double point_b_lon) {
+    // Calculate three sides of triangle
+    double side_a = ht_calculate_distance(user_lat, user_lon, point_b_lat, point_b_lon);       // user→drone
+    double side_b = ht_calculate_distance(user_lat, user_lon, point_a_lat, point_a_lon);       // user→takeoff
+    double side_c = ht_calculate_distance(point_a_lat, point_a_lon, point_b_lat, point_b_lon); // takeoff→drone
+
+    // Handle degenerate cases
+    if (side_a < 0.1 || side_b < 0.1) {
+        return 0.0f; // Too close to calculate angle
+    }
+
+    // Law of cosines: cos(angle) = (b² + a² - c²) / (2*b*a)
+    double cos_angle = (side_b * side_b + side_a * side_a - side_c * side_c) /
+                       (2.0 * side_b * side_a);
+
+    // Clamp to [-1, 1] for numerical stability
+    if (cos_angle > 1.0)
+        cos_angle = 1.0;
+    if (cos_angle < -1.0)
+        cos_angle = -1.0;
+
+    double angle = acos(cos_angle) * RAD_TO_DEG;
+
+    // Determine sign using cross product (is drone left or right of reference line?)
+    // Calculate bearings for cross product
+    double lat1 = user_lat * DEG_TO_RAD;
+    double lon1 = user_lon * DEG_TO_RAD;
+    double lat_a = point_a_lat * DEG_TO_RAD;
+    double lon_a = point_a_lon * DEG_TO_RAD;
+    double lat_b = point_b_lat * DEG_TO_RAD;
+    double lon_b = point_b_lon * DEG_TO_RAD;
+
+    // Vector from user to takeoff (reference line)
+    double dlon_a = lon_a - lon1;
+    double y_a = sin(dlon_a) * cos(lat_a);
+    double x_a = cos(lat1) * sin(lat_a) - sin(lat1) * cos(lat_a) * cos(dlon_a);
+
+    // Vector from user to drone
+    double dlon_b = lon_b - lon1;
+    double y_b = sin(dlon_b) * cos(lat_b);
+    double x_b = cos(lat1) * sin(lat_b) - sin(lat1) * cos(lat_b) * cos(dlon_b);
+
+    // Cross product z-component (positive = counter-clockwise, negative = clockwise)
+    double cross_z = x_a * y_b - y_a * x_b;
+
+    if (cross_z < 0) {
+        angle = -angle; // Drone is clockwise from reference
+    }
+
+    return (float)angle;
+}
+
+// Called when drone arms (detect from OSD or ELRS telemetry)
+void ht_antenna_tracker_on_arm_event() {
+    if (!ht_data.gps_data.valid) {
+        LOGW("Arm event ignored: No valid GPS data");
+        return;
+    }
+
+    if (ht_data.antenna_tracker.arm_count == 0) {
+        // First arm: Save user position
+        ht_data.antenna_tracker.user_latitude = ht_data.gps_data.latitude;
+        ht_data.antenna_tracker.user_longitude = ht_data.gps_data.longitude;
+        ht_data.antenna_tracker.user_altitude = ht_data.gps_data.altitude;
+        ht_data.antenna_tracker.arm_count = 1;
+        ht_data.antenna_tracker.legacy_mode = false;
+        ht_data.antenna_tracker.is_calibrated = false;
+
+        LOGI("Antenna tracker: User position set on first arm");
+        LOGI("  Position: lat=%.6f, lon=%.6f, alt=%.1fm",
+             ht_data.antenna_tracker.user_latitude,
+             ht_data.antenna_tracker.user_longitude,
+             ht_data.antenna_tracker.user_altitude);
+        LOGI("  Waiting for second arm at takeoff location...");
+
+    } else if (ht_data.antenna_tracker.arm_count == 1) {
+        // Second arm: Save takeoff position and calibrate
+        ht_data.antenna_tracker.takeoff_latitude = ht_data.gps_data.latitude;
+        ht_data.antenna_tracker.takeoff_longitude = ht_data.gps_data.longitude;
+        ht_data.antenna_tracker.takeoff_altitude = ht_data.gps_data.altitude;
+
+        ht_data.antenna_tracker.arm_count = 2;
+        ht_data.antenna_tracker.is_calibrated = true;
+        ht_data.antenna_tracker.legacy_mode = false;
+
+        // Reset compass center position to align with calibration
+        // This sets the current heading as the home position (0°)
+        ht_set_center_position();
+
+        // No need to store offsets since we've reset the center
+        ht_data.antenna_tracker.pan_offset = 0.0f;
+        ht_data.antenna_tracker.tilt_offset = 0.0f;
+
+        double distance = ht_calculate_distance(
+            ht_data.antenna_tracker.user_latitude,
+            ht_data.antenna_tracker.user_longitude,
+            ht_data.antenna_tracker.takeoff_latitude,
+            ht_data.antenna_tracker.takeoff_longitude);
+
+        LOGI("Antenna tracker: Fully calibrated on second arm");
+        LOGI("  User position: lat=%.6f, lon=%.6f, alt=%.1fm",
+             ht_data.antenna_tracker.user_latitude,
+             ht_data.antenna_tracker.user_longitude,
+             ht_data.antenna_tracker.user_altitude);
+        LOGI("  Takeoff position: lat=%.6f, lon=%.6f, alt=%.1fm",
+             ht_data.antenna_tracker.takeoff_latitude,
+             ht_data.antenna_tracker.takeoff_longitude,
+             ht_data.antenna_tracker.takeoff_altitude);
+        LOGI("  Distance: %.1fm, Pan offset: %.1f°, Tilt offset: %.1f°",
+             distance,
+             ht_data.antenna_tracker.pan_offset,
+             ht_data.antenna_tracker.tilt_offset);
+    } else {
+        // 3rd+ arm: Already calibrated, ignore
+        LOGD("Antenna tracker: Already calibrated, ignoring arm event");
+    }
+}
+
+// Reset calibration (called when new session starts)
+void ht_antenna_tracker_reset_calibration() {
+    ht_data.antenna_tracker.arm_count = 0;
+    ht_data.antenna_tracker.is_calibrated = false;
+    ht_data.antenna_tracker.legacy_mode = false;
+    ht_data.antenna_tracker.pan_offset = 0.0f;
+    ht_data.antenna_tracker.tilt_offset = 0.0f;
+    // Note: Don't reset GPS data - it may still be valid
+
+    // Reset the armed state detection in OSD thread
+    // This ensures the next arm event will be properly detected
+    osd_reset_armed_state();
+
+    LOGI("Antenna tracker calibration reset - ready for new calibration");
+}
+
+// Get current arm count for UI display
+uint8_t ht_antenna_tracker_get_arm_count() {
+    return ht_data.antenna_tracker.arm_count;
+}
+
 // Test calibration with dummy coordinates for development
 void ht_antenna_tracker_test_calibrate() {
-    // Set dummy GPS at origin (home position)
-    ht_data.gps_data.latitude = 37.7749;
-    ht_data.gps_data.longitude = -122.4194;
-    ht_data.gps_data.altitude = 0.0f;
-    ht_data.gps_data.valid = true;
+    // Simulate two-point calibration for testing
 
-    // Store as origin
-    ht_data.antenna_tracker.origin_latitude = ht_data.gps_data.latitude;
-    ht_data.antenna_tracker.origin_longitude = ht_data.gps_data.longitude;
-    ht_data.antenna_tracker.origin_altitude = ht_data.gps_data.altitude;
+    // Set user position (San Francisco)
+    ht_data.antenna_tracker.user_latitude = 37.7749;
+    ht_data.antenna_tracker.user_longitude = -122.4194;
+    ht_data.antenna_tracker.user_altitude = 0.0f;
+
+    // Set takeoff position (100m north of user)
+    ht_data.antenna_tracker.takeoff_latitude = 37.7749 + (100.0 / 111111.0);
+    ht_data.antenna_tracker.takeoff_longitude = -122.4194;
+    ht_data.antenna_tracker.takeoff_altitude = 0.0f;
 
     // Store current head tracker angles as offsets
     ht_data.antenna_tracker.pan_offset = ht_data.panAngle;
     ht_data.antenna_tracker.tilt_offset = ht_data.tiltAngle;
+    ht_data.antenna_tracker.arm_count = 2;
     ht_data.antenna_tracker.is_calibrated = true;
+    ht_data.antenna_tracker.legacy_mode = false;
 
-    // Now set dummy drone position 100m north and 50m up
-    ht_data.gps_data.latitude = 37.7749 + (100.0 / 111111.0); // ~100m north
-    ht_data.gps_data.longitude = -122.4194;                   // same longitude
-    ht_data.gps_data.altitude = 50.0f;                        // 50m up
+    // Now set dummy drone position 100m north and 50m up from takeoff
+    ht_data.gps_data.latitude = 37.7749 + (200.0 / 111111.0); // 200m north total
+    ht_data.gps_data.longitude = -122.4194;
+    ht_data.gps_data.altitude = 50.0f;
     ht_data.gps_data.valid = true;
 
-    LOGI("Test calibration: home at %.6f,%.6f, drone at %.6f,%.6f,%.1fm",
-         ht_data.antenna_tracker.origin_latitude,
-         ht_data.antenna_tracker.origin_longitude,
+    LOGI("Test calibration: user at %.6f,%.6f, takeoff at %.6f,%.6f, drone at %.6f,%.6f,%.1fm",
+         ht_data.antenna_tracker.user_latitude,
+         ht_data.antenna_tracker.user_longitude,
+         ht_data.antenna_tracker.takeoff_latitude,
+         ht_data.antenna_tracker.takeoff_longitude,
          ht_data.gps_data.latitude,
          ht_data.gps_data.longitude,
          ht_data.gps_data.altitude);
 }
 
-// Calculate azimuth (bearing) from origin to drone in degrees (0-360)
+// Calculate azimuth (bearing) to point at drone using triangle method
+// Returns angle in degrees relative to the calibrated heading (where user looked during second arm)
+// The direction user was looking during second arm = 0°
 float ht_get_drone_azimuth() {
     if (!ht_data.antenna_tracker.is_calibrated || !ht_data.gps_data.valid) {
         return 0.0f; // Return 0 if not calibrated or no GPS
     }
 
-    // Convert to radians
-    double lat1 = ht_data.antenna_tracker.origin_latitude * DEG_TO_RAD;
-    double lon1 = ht_data.antenna_tracker.origin_longitude * DEG_TO_RAD;
-    double lat2 = ht_data.gps_data.latitude * DEG_TO_RAD;
-    double lon2 = ht_data.gps_data.longitude * DEG_TO_RAD;
+    // Calculate angle at user position between takeoff and drone
+    float angle = ht_calculate_angle_at_user(
+        ht_data.antenna_tracker.user_latitude,
+        ht_data.antenna_tracker.user_longitude,
+        ht_data.antenna_tracker.takeoff_latitude,
+        ht_data.antenna_tracker.takeoff_longitude,
+        ht_data.gps_data.latitude,
+        ht_data.gps_data.longitude);
 
-    // Calculate bearing using forward azimuth formula
-    double dlon = lon2 - lon1;
-    double y = sin(dlon) * cos(lat2);
-    double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dlon);
-    double bearing = atan2(y, x);
+    // Subtract the pan offset to make angles relative to calibration heading
+    // When drone is at takeoff, angle should be ~0° (where user was looking during arm)
+    float target_angle = angle - ht_data.antenna_tracker.pan_offset;
 
-    // Convert to degrees and normalize to 0-360
-    bearing = bearing * RAD_TO_DEG;
-    if (bearing < 0) {
-        bearing += 360.0;
-    }
-
-    return (float)bearing;
+    return target_angle;
 }
 
-// Calculate elevation angle from origin to drone in degrees
+// Calculate elevation angle from user to drone
 float ht_get_drone_elevation() {
     if (!ht_data.antenna_tracker.is_calibrated || !ht_data.gps_data.valid) {
         return 0.0f; // Return 0 if not calibrated or no GPS
     }
 
-    // Convert to radians
-    double lat1 = ht_data.antenna_tracker.origin_latitude * DEG_TO_RAD;
-    double lon1 = ht_data.antenna_tracker.origin_longitude * DEG_TO_RAD;
-    double lat2 = ht_data.gps_data.latitude * DEG_TO_RAD;
-    double lon2 = ht_data.gps_data.longitude * DEG_TO_RAD;
+    // Calculate horizontal distance from user to drone
+    double horizontal_distance = ht_calculate_distance(
+        ht_data.antenna_tracker.user_latitude,
+        ht_data.antenna_tracker.user_longitude,
+        ht_data.gps_data.latitude,
+        ht_data.gps_data.longitude);
 
-    // Calculate horizontal distance using haversine formula
-    double dlat = lat2 - lat1;
-    double dlon = lon2 - lon1;
-    double a = sin(dlat / 2) * sin(dlat / 2) +
-               cos(lat1) * cos(lat2) * sin(dlon / 2) * sin(dlon / 2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    double horizontal_distance = 6371000.0 * c; // Earth radius in meters
-
-    // Calculate vertical distance
-    double vertical_distance = ht_data.gps_data.altitude - ht_data.antenna_tracker.origin_altitude;
+    // Calculate vertical distance (altitude difference)
+    double vertical_distance = ht_data.gps_data.altitude -
+                               ht_data.antenna_tracker.user_altitude;
 
     // Calculate elevation angle
     double elevation = atan2(vertical_distance, horizontal_distance) * RAD_TO_DEG;
+
+    // Add tilt offset from calibration
+    // This accounts for user not pointing perfectly level during calibration
+    elevation += ht_data.antenna_tracker.tilt_offset;
 
     return (float)elevation;
 }

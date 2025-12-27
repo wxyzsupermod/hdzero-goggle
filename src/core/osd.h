@@ -52,6 +52,7 @@ typedef struct {
     lv_obj_t *clock[2][OSD_CLOCK_TOTAL];
     lv_obj_t *head_tracker_compass[2];
     lv_obj_t *head_tracker_altitude[2];
+    lv_obj_t *calibration_instruction[2]; // Antenna tracker calibration instructions
 } osd_hdzero_t;
 
 typedef struct
@@ -94,6 +95,7 @@ int osd_init(void);
 int osd_clear(void);
 void osd_fhd(uint8_t);
 void osd_signal_update();
+void osd_reset_armed_state();
 void osd_hdzero_update(void);
 void osd_rec_update(bool enable);
 void osd_show(bool show);

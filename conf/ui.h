@@ -75,7 +75,7 @@ extern "C" {
 #define UI_FANS_COLS                      160, 160, 160, 160, 140, 160, LV_GRID_TEMPLATE_LAST
 #define UI_FANS_ROWS                      60, 60, 60, 60, 60, 60, 60, 60, 60, 60, LV_GRID_TEMPLATE_LAST
 #define UI_HT_COLS                        160, 160, 160, 160, 160, 160, LV_GRID_TEMPLATE_LAST
-#define UI_HT_ROWS                        55, 55, 55, 55, 55, 55, 55, 55, 60, 30, 30, 30, LV_GRID_TEMPLATE_LAST
+#define UI_HT_ROWS                        55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 60, 30, 30, 30, LV_GRID_TEMPLATE_LAST
 #define UI_HT_CALIBRATION_SIZE            500, 25
 #define UI_IMAGESETTING_COLS              160, 160, 160, 160, 140, 220, LV_GRID_TEMPLATE_LAST
 #define UI_IMAGESETTING_ROWS              60, 60, 60, 60, 60, 60, 60, 60, 60, 60, LV_GRID_TEMPLATE_LAST
@@ -218,7 +218,7 @@ static inline int UI_STATUS_BAR_LABEL_WIDTH() {
 #define UI_FANS_COLS                      106, 106, 106, 106, 92, 106, LV_GRID_TEMPLATE_LAST
 #define UI_FANS_ROWS                      40, 40, 40, 40, 40, 40, 40, 40, 40, 40, LV_GRID_TEMPLATE_LAST
 #define UI_HT_COLS                        106, 106, 106, 106, 106, 106, LV_GRID_TEMPLATE_LAST
-#define UI_HT_ROWS                        40, 40, 40, 40, 40, 40, 40, 40, 40, 22, 22, 22, LV_GRID_TEMPLATE_LAST
+#define UI_HT_ROWS                        40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 22, 22, 22, LV_GRID_TEMPLATE_LAST
 #define UI_HT_CALIBRATION_SIZE            320, 16
 #define UI_IMAGESETTING_COLS              106, 106, 106, 106, 92, 146, LV_GRID_TEMPLATE_LAST
 #define UI_IMAGESETTING_ROWS              40, 40, 40, 40, 40, 40, 40, 40, 40, 40, LV_GRID_TEMPLATE_LAST

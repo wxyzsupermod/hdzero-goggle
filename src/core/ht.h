@@ -17,25 +17,33 @@ extern "C" {
 
 // Antenna tracker GPS data from Betaflight OSD
 typedef struct {
-    double latitude;  // Current GPS latitude (degrees)
-    double longitude; // Current GPS longitude (degrees)
-    float altitude;   // Current GPS altitude (meters MSL)
-    bool valid;       // GPS fix valid
+    double latitude;         // Current GPS latitude (degrees)
+    double longitude;        // Current GPS longitude (degrees)
+    float altitude;          // Current GPS altitude (meters MSL)
+    bool valid;              // GPS fix valid
+    time_t last_update_time; // Timestamp of last GPS update
 } ht_gps_data_t;
 
 // Antenna tracker calibration data
 typedef struct {
-    // Drone origin position (home point)
-    double origin_latitude;
-    double origin_longitude;
-    float origin_altitude; // meters MSL
+    // User position (where operator stands during first arm)
+    double user_latitude;
+    double user_longitude;
+    float user_altitude;
 
-    // Head tracker angles when pointing at origin during calibration
-    float pan_offset;  // degrees
-    float tilt_offset; // degrees
+    // Drone takeoff position (locked on second arm)
+    double takeoff_latitude;
+    double takeoff_longitude;
+    float takeoff_altitude;
+
+    // Head tracker angles when pointing at takeoff during second arm
+    float pan_offset;  // Current pan angle when drone armed at takeoff
+    float tilt_offset; // Current tilt angle when drone armed at takeoff
 
     // Calibration state
-    bool is_calibrated;
+    uint8_t arm_count;  // 0, 1, or 2+ arms
+    bool is_calibrated; // true when arm_count >= 2
+    bool legacy_mode;   // true if only 1 arm (use old method)
 } ht_antenna_tracker_cal_t;
 
 typedef struct {
@@ -92,6 +100,16 @@ float ht_get_tilt_angle();
 void head_alarm_init();
 
 // Antenna tracker functions
+void ht_antenna_tracker_on_arm_event();
+void ht_antenna_tracker_reset_calibration();
+uint8_t ht_antenna_tracker_get_arm_count();
+
+// Triangle-based tracking calculations
+float ht_calculate_angle_at_user(double user_lat, double user_lon,
+                                 double point_a_lat, double point_a_lon,
+                                 double point_b_lat, double point_b_lon);
+double ht_calculate_distance(double lat1, double lon1, double lat2, double lon2);
+
 void ht_antenna_tracker_calibrate();
 void ht_antenna_tracker_update_gps(double latitude, double longitude, float altitude, bool valid);
 bool ht_antenna_tracker_is_gps_valid();
@@ -99,6 +117,7 @@ bool ht_antenna_tracker_is_calibrated();
 void ht_antenna_tracker_test_calibrate();
 float ht_get_drone_azimuth();
 float ht_get_drone_elevation();
+float ht_get_pan_offset();
 
 #ifdef __cplusplus
 }
