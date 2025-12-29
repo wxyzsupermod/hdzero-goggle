@@ -1165,21 +1165,20 @@ static void embedded_osd_init(uint8_t fhd) {
     lv_canvas_fill_bg(g_osd_hdzero.head_tracker_compass[fhd], lv_color_hex(0x000000), LV_OPA_TRANSP);
     lv_obj_set_style_bg_opa(g_osd_hdzero.head_tracker_compass[fhd], LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(g_osd_hdzero.head_tracker_compass[fhd], 0, 0);
-    lv_obj_set_pos(g_osd_hdzero.head_tracker_compass[fhd], 0, 0); // Top left
+    osd_object_set_pos(fhd, g_osd_hdzero.head_tracker_compass[fhd], &g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_COMPASS].position);
     lv_obj_add_flag(g_osd_hdzero.head_tracker_compass[fhd], LV_OBJ_FLAG_HIDDEN);
 
     // Initialize head tracker altitude/pitch (vertical on right side)
     g_osd_hdzero.head_tracker_altitude[fhd] = lv_canvas_create(so);
     if (fhd) {
         lv_canvas_set_buffer(g_osd_hdzero.head_tracker_altitude[fhd], cbuf_altitude_fhd, 80, 1080, LV_IMG_CF_TRUE_COLOR_ALPHA);
-        lv_obj_set_pos(g_osd_hdzero.head_tracker_altitude[fhd], 1920 - 80, 0); // Right edge
     } else {
         lv_canvas_set_buffer(g_osd_hdzero.head_tracker_altitude[fhd], cbuf_altitude_hd, 55, 720, LV_IMG_CF_TRUE_COLOR_ALPHA);
-        lv_obj_set_pos(g_osd_hdzero.head_tracker_altitude[fhd], 1280 - 55, 0); // Right edge
     }
     lv_canvas_fill_bg(g_osd_hdzero.head_tracker_altitude[fhd], lv_color_hex(0x000000), LV_OPA_TRANSP);
     lv_obj_set_style_bg_opa(g_osd_hdzero.head_tracker_altitude[fhd], LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(g_osd_hdzero.head_tracker_altitude[fhd], 0, 0);
+    osd_object_set_pos(fhd, g_osd_hdzero.head_tracker_altitude[fhd], &g_setting.osd.element[OSD_GOGGLE_HEAD_TRACKER_ALTITUDE].position);
     lv_obj_add_flag(g_osd_hdzero.head_tracker_altitude[fhd], LV_OBJ_FLAG_HIDDEN);
 
     // Create calibration instruction label (centered on screen)
