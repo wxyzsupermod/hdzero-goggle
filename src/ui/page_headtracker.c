@@ -70,6 +70,8 @@ static void update_visibility(uint8_t page) {
         lv_obj_add_flag(pp_headtracker.p_arr.panel[8], FLAG_SELECTABLE);
         lv_obj_add_flag(pp_headtracker.p_arr.panel[9], FLAG_SELECTABLE);
         lv_obj_add_flag(pp_headtracker.p_arr.panel[10], FLAG_SELECTABLE);
+        lv_obj_add_flag(pp_headtracker.p_arr.panel[11], FLAG_SELECTABLE);
+        lv_obj_add_flag(pp_headtracker.p_arr.panel[12], FLAG_SELECTABLE);
 
     } else if (page == PAGE1) {
         lv_obj_add_state(label_cali, STATE_DISABLED);
@@ -89,7 +91,9 @@ static void update_visibility(uint8_t page) {
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[7], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[8], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[9], FLAG_SELECTABLE);
-        lv_obj_add_flag(pp_headtracker.p_arr.panel[10], FLAG_SELECTABLE);
+        lv_obj_clear_flag(pp_headtracker.p_arr.panel[10], FLAG_SELECTABLE);
+        lv_obj_clear_flag(pp_headtracker.p_arr.panel[11], FLAG_SELECTABLE);
+        lv_obj_add_flag(pp_headtracker.p_arr.panel[12], FLAG_SELECTABLE);
     }
 
     if (g_setting.ht.enable && page == PAGE2) {
@@ -98,6 +102,7 @@ static void update_visibility(uint8_t page) {
         lv_obj_add_flag(pp_headtracker.p_arr.panel[1], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[3], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[4], FLAG_SELECTABLE);
+        lv_obj_add_flag(pp_headtracker.p_arr.panel[12], FLAG_SELECTABLE);
 
         if (g_setting.ht.alarm_state != SETTING_HT_ALARM_STATE_OFF) {
             lv_obj_clear_state(label_alarm_angle, STATE_DISABLED);
@@ -120,6 +125,9 @@ static void update_visibility(uint8_t page) {
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[7], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[8], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_headtracker.p_arr.panel[9], FLAG_SELECTABLE);
+        lv_obj_clear_flag(pp_headtracker.p_arr.panel[10], FLAG_SELECTABLE);
+        lv_obj_clear_flag(pp_headtracker.p_arr.panel[11], FLAG_SELECTABLE);
+        lv_obj_clear_flag(pp_headtracker.p_arr.panel[12], FLAG_SELECTABLE);
     }
 
     // hiding and showing elements
@@ -251,9 +259,9 @@ static lv_obj_t *page_headtracker_create(lv_obj_t *parent, panel_arr_t *arr) {
     btn_group_set_sel(&btn_group_tilt_invert, g_setting.ht.tilt_invert ? 1 : 0);
 
     snprintf(buf, sizeof(buf), "< %s", _lang("Back"));
-    create_label_item(cont, buf, 1, 8, 1);
+    create_label_item(cont, buf, 1, 9, 1);
 
-    create_label_item(cont, _lang("Pan"), 1, 9, 1);
+    create_label_item(cont, _lang("Pan"), 1, 11, 1);
     pan = lv_bar_create(cont);
     lv_bar_set_range(pan, 1000, 2000);
     lv_obj_set_size(pan, UI_HT_CALIBRATION_SIZE);
@@ -268,9 +276,9 @@ static lv_obj_t *page_headtracker_create(lv_obj_t *parent, panel_arr_t *arr) {
 #endif
     lv_obj_set_style_radius(pan, 0, LV_PART_INDICATOR);
     lv_obj_set_grid_cell(pan, LV_GRID_ALIGN_START, 2, 1,
-                         LV_GRID_ALIGN_CENTER, 9, 1);
+                         LV_GRID_ALIGN_CENTER, 11, 1);
 
-    create_label_item(cont, _lang("Tilt"), 1, 10, 1);
+    create_label_item(cont, _lang("Tilt"), 1, 12, 1);
     tilt = lv_bar_create(cont);
     lv_bar_set_range(tilt, 1000, 2000);
     lv_obj_set_size(tilt, UI_HT_CALIBRATION_SIZE);
@@ -285,9 +293,9 @@ static lv_obj_t *page_headtracker_create(lv_obj_t *parent, panel_arr_t *arr) {
 #endif
     lv_obj_set_style_radius(tilt, 0, LV_PART_INDICATOR);
     lv_obj_set_grid_cell(tilt, LV_GRID_ALIGN_START, 2, 1,
-                         LV_GRID_ALIGN_CENTER, 10, 1);
+                         LV_GRID_ALIGN_CENTER, 12, 1);
 
-    create_label_item(cont, _lang("Roll"), 1, 11, 1);
+    create_label_item(cont, _lang("Roll"), 1, 13, 1);
     roll = lv_bar_create(cont);
     lv_bar_set_range(roll, 1000, 2000);
     lv_obj_set_size(roll, UI_HT_CALIBRATION_SIZE);
@@ -302,7 +310,7 @@ static lv_obj_t *page_headtracker_create(lv_obj_t *parent, panel_arr_t *arr) {
 #endif
     lv_obj_set_style_radius(roll, 0, LV_PART_INDICATOR);
     lv_obj_set_grid_cell(roll, LV_GRID_ALIGN_START, 2, 1,
-                         LV_GRID_ALIGN_CENTER, 11, 1);
+                         LV_GRID_ALIGN_CENTER, 13, 1);
 
     curr_page = PAGE1;
     update_visibility(curr_page);
