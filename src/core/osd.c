@@ -1495,9 +1495,6 @@ void osd_reset_armed_state() {
     LOGI("OSD armed state detection will be reset");
 }
 
-// Parse GPS coordinates from Betaflight OSD text
-// Scans OSD buffer for GPS LAT/LON symbols and parses the displayed coordinate text
-void osd_parse_gps_data() {
 // Betaflight OSD symbol codes
 #define SYM_LAT      0x89
 #define SYM_LON      0x98
@@ -1505,18 +1502,144 @@ void osd_parse_gps_data() {
 #define SYM_M        0x0C
 #define SYM_FT       0x0F
 
-// Betaflight armed state detection
-// Look for the absence of "DISARMED" text in the OSD
-// When armed, the DISARMED element disappears from the OSD
-#define DISARMED_TEXT "DISARMED"
+// Parse latitude value from OSD buffer at the given position
+// Returns true if valid latitude was parsed
+static bool parse_latitude(int row, int col, double *out_lat) {
+    // Parse latitude text after symbol
+    // Format: 0x89 followed by ASCII text like " -12.3456789" or " 12.3456789"
+    char lat_text[20];
+    int text_pos = 0;
+    bool parsing = true;
 
+    for (int i = col + 1; i < col + 15 && i < HD_HMAX && parsing; i++) {
+        uint16_t c = fc_osd[row][i];
+        if (c >= 0x20 && c <= 0x7E) { // ASCII printable
+            char ascii = (char)c;
+            // Accept digits, decimal point, minus sign, and space
+            if ((ascii >= '0' && ascii <= '9') || ascii == '.' || ascii == '-' || ascii == ' ') {
+                if (text_pos < sizeof(lat_text) - 1) {
+                    lat_text[text_pos++] = ascii;
+                }
+            } else {
+                parsing = false; // Stop at first non-numeric character
+            }
+        } else {
+            parsing = false; // Stop at special characters
+        }
+    }
+    lat_text[text_pos] = '\0';
+
+    // Parse the numeric string
+    if (text_pos > 0) {
+        double parsed_lat = atof(lat_text);
+        if (parsed_lat >= -90.0 && parsed_lat <= 90.0) {
+            *out_lat = parsed_lat;
+            return true;
+        }
+    }
+    return false;
+}
+
+// Parse longitude value from OSD buffer at the given position
+// Returns true if valid longitude was parsed
+static bool parse_longitude(int row, int col, double *out_lon) {
+    // Parse longitude text after symbol
+    char lon_text[20];
+    int text_pos = 0;
+    bool parsing = true;
+
+    for (int i = col + 1; i < col + 15 && i < HD_HMAX && parsing; i++) {
+        uint16_t c = fc_osd[row][i];
+        if (c >= 0x20 && c <= 0x7E) { // ASCII printable
+            char ascii = (char)c;
+            if ((ascii >= '0' && ascii <= '9') || ascii == '.' || ascii == '-' || ascii == ' ') {
+                if (text_pos < sizeof(lon_text) - 1) {
+                    lon_text[text_pos++] = ascii;
+                }
+            } else {
+                parsing = false;
+            }
+        } else {
+            parsing = false;
+        }
+    }
+    lon_text[text_pos] = '\0';
+
+    if (text_pos > 0) {
+        double parsed_lon = atof(lon_text);
+        if (parsed_lon >= -180.0 && parsed_lon <= 180.0) {
+            *out_lon = parsed_lon;
+            return true;
+        }
+    }
+    return false;
+}
+
+// Parse altitude value from OSD buffer at the given position
+// Returns true if valid altitude was parsed (converted to meters)
+static bool parse_altitude(int row, int col, float *out_alt) {
+    // Log character dump for debugging
+    char debug_chars[80];
+    int debug_pos = 0;
+    for (int j = col; j < col + 12 && j < HD_HMAX; j++) {
+        debug_pos += snprintf(debug_chars + debug_pos, sizeof(debug_chars) - debug_pos, "%02X ", fc_osd[row][j]);
+    }
+
+    LOGD("Altitude symbol found at row %d, col %d: %s", row, col, debug_chars);
+
+    // Parse altitude text
+    char alt_text[15];
+    int text_pos = 0;
+    bool parsing = true;
+    bool found = false;
+
+    for (int i = col + 1; i < col + 12 && i < HD_HMAX && parsing; i++) {
+        uint16_t c = fc_osd[row][i];
+
+        // Check for unit symbols FIRST (they are 0x0C and 0x0F, which are < 0x20)
+        if (c == SYM_M || c == SYM_FT) {
+            alt_text[text_pos] = '\0';
+            // Convert feet to meters if needed
+            float alt = atof(alt_text);
+            if (c == SYM_FT) {
+                alt *= 0.3048f; // Convert feet to meters
+            }
+            LOGI("Altitude parsed: text='%s' value=%.2f%s",
+                 alt_text, alt, c == SYM_FT ? " (ft->m)" : "m");
+
+            if (alt >= -500000.0f && alt <= 1000000.0f) { // Reasonable altitude range
+                *out_alt = alt;
+                found = true;
+            }
+            parsing = false;
+        } else if (c >= 0x20 && c <= 0x7E) {
+            // ASCII printable character
+            char ascii = (char)c;
+            if ((ascii >= '0' && ascii <= '9') || ascii == '.' || ascii == '-' || ascii == ' ') {
+                if (text_pos < sizeof(alt_text) - 1) {
+                    alt_text[text_pos++] = ascii;
+                }
+            } else {
+                // Non-numeric, non-unit ASCII character - stop
+                parsing = false;
+            }
+        } else {
+            // Non-ASCII, non-unit character
+            parsing = false;
+        }
+    }
+    return found;
+}
+
+// Parse GPS coordinates from Betaflight OSD text
+// Scans OSD buffer for GPS LAT/LON symbols and parses the displayed coordinate text
+void osd_parse_gps_data() {
     static double gps_lat = 0.0;
     static double gps_lon = 0.0;
     static float gps_alt = 0.0;
     static bool gps_valid = false;
     bool lat_found = false;
     bool lon_found = false;
-    bool alt_found = false;
 
     // Scan OSD buffer for GPS coordinate symbols
     for (int row = 0; row < HD_VMAX; row++) {
@@ -1525,124 +1648,21 @@ void osd_parse_gps_data() {
 
             // Look for latitude symbol (0x89)
             if (ch == SYM_LAT && col < HD_HMAX - 10) {
-                // Parse latitude text after symbol
-                // Format: 0x89 followed by ASCII text like " -12.3456789" or " 12.3456789"
-                char lat_text[20];
-                int text_pos = 0;
-                bool parsing = true;
-
-                for (int i = col + 1; i < col + 15 && i < HD_HMAX && parsing; i++) {
-                    uint16_t c = fc_osd[row][i];
-                    if (c >= 0x20 && c <= 0x7E) { // ASCII printable
-                        char ascii = (char)c;
-                        // Accept digits, decimal point, minus sign, and space
-                        if ((ascii >= '0' && ascii <= '9') || ascii == '.' || ascii == '-' || ascii == ' ') {
-                            if (text_pos < sizeof(lat_text) - 1) {
-                                lat_text[text_pos++] = ascii;
-                            }
-                        } else {
-                            parsing = false; // Stop at first non-numeric character
-                        }
-                    } else {
-                        parsing = false; // Stop at special characters
-                    }
-                }
-                lat_text[text_pos] = '\0';
-
-                // Parse the numeric string
-                if (text_pos > 0) {
-                    double parsed_lat = atof(lat_text);
-                    if (parsed_lat >= -90.0 && parsed_lat <= 90.0) {
-                        gps_lat = parsed_lat;
-                        lat_found = true;
-                    }
+                if (parse_latitude(row, col, &gps_lat)) {
+                    lat_found = true;
                 }
             }
 
             // Look for longitude symbol (0x98)
             if (ch == SYM_LON && col < HD_HMAX - 10) {
-                // Parse longitude text after symbol
-                char lon_text[20];
-                int text_pos = 0;
-                bool parsing = true;
-
-                for (int i = col + 1; i < col + 15 && i < HD_HMAX && parsing; i++) {
-                    uint16_t c = fc_osd[row][i];
-                    if (c >= 0x20 && c <= 0x7E) { // ASCII printable
-                        char ascii = (char)c;
-                        if ((ascii >= '0' && ascii <= '9') || ascii == '.' || ascii == '-' || ascii == ' ') {
-                            if (text_pos < sizeof(lon_text) - 1) {
-                                lon_text[text_pos++] = ascii;
-                            }
-                        } else {
-                            parsing = false;
-                        }
-                    } else {
-                        parsing = false;
-                    }
-                }
-                lon_text[text_pos] = '\0';
-
-                if (text_pos > 0) {
-                    double parsed_lon = atof(lon_text);
-                    if (parsed_lon >= -180.0 && parsed_lon <= 180.0) {
-                        gps_lon = parsed_lon;
-                        lon_found = true;
-                    }
+                if (parse_longitude(row, col, &gps_lon)) {
+                    lon_found = true;
                 }
             }
 
             // Look for altitude symbol (0x7F)
             if (ch == SYM_ALTITUDE && col < HD_HMAX - 8) {
-                // Log character dump for debugging
-                char debug_chars[80];
-                int debug_pos = 0;
-                for (int j = col; j < col + 12 && j < HD_HMAX; j++) {
-                    debug_pos += snprintf(debug_chars + debug_pos, sizeof(debug_chars) - debug_pos, "%02X ", fc_osd[row][j]);
-                }
-
-                LOGD("Altitude symbol found at row %d, col %d: %s", row, col, debug_chars);
-
-                // Parse altitude text
-                char alt_text[15];
-                int text_pos = 0;
-                bool parsing = true;
-
-                for (int i = col + 1; i < col + 12 && i < HD_HMAX && parsing; i++) {
-                    uint16_t c = fc_osd[row][i];
-
-                    // Check for unit symbols FIRST (they are 0x0C and 0x0F, which are < 0x20)
-                    if (c == SYM_M || c == SYM_FT) {
-                        alt_text[text_pos] = '\0';
-                        // Convert feet to meters if needed
-                        float alt = atof(alt_text);
-                        if (c == SYM_FT) {
-                            alt *= 0.3048f; // Convert feet to meters
-                        }
-                        LOGI("Altitude parsed: text='%s' value=%.2f%s",
-                             alt_text, alt, c == SYM_FT ? " (ft->m)" : "m");
-
-                        if (alt >= -500000.0f && alt <= 1000000.0f) { // Reasonable altitude range
-                            gps_alt = alt;
-                            alt_found = true;
-                        }
-                        parsing = false;
-                    } else if (c >= 0x20 && c <= 0x7E) {
-                        // ASCII printable character
-                        char ascii = (char)c;
-                        if ((ascii >= '0' && ascii <= '9') || ascii == '.' || ascii == '-' || ascii == ' ') {
-                            if (text_pos < sizeof(alt_text) - 1) {
-                                alt_text[text_pos++] = ascii;
-                            }
-                        } else {
-                            // Non-numeric, non-unit ASCII character - stop
-                            parsing = false;
-                        }
-                    } else {
-                        // Non-ASCII, non-unit character
-                        parsing = false;
-                    }
-                }
+                parse_altitude(row, col, &gps_alt);
             }
         }
     }
@@ -1698,6 +1718,68 @@ bool osd_detect_armed() {
     return armed_text_found;
 }
 
+// Handle GPS parsing, armed detection, and antenna tracker calibration
+// This encapsulates all GPS-related logic in the OSD thread
+static void handle_gps_and_calibration(bool *was_armed) {
+    // Parse GPS coordinates from OSD (updates GPS data)
+    osd_parse_gps_data();
+
+    // Detect armed state
+    bool is_armed = osd_detect_armed();
+
+    // Check if armed state should be reset (after calibration reset)
+    if (reset_armed_state) {
+        *was_armed = is_armed; // Sync to current state
+        reset_armed_state = false;
+        LOGI("Armed state detection reset, current state: %s", is_armed ? "ARMED" : "DISARMED");
+    }
+
+    // Auto-calibrate on arm (rising edge)
+    // Two-point calibration: first arm = user position, second arm = takeoff position
+    if (is_armed && !(*was_armed)) {
+        // GPS coordinates have already been parsed by osd_parse_gps_data()
+        // Trigger calibration event with the current GPS data
+        if (ht_antenna_tracker_is_gps_valid()) {
+            uint8_t arm_count = ht_antenna_tracker_get_arm_count();
+            LOGI("Drone armed (arm #%d) - triggering antenna tracker calibration step", arm_count + 1);
+            ht_antenna_tracker_on_arm_event();
+        } else {
+            LOGW("Drone armed but no valid GPS fix - cannot calibrate");
+        }
+    } else if (!is_armed && *was_armed) {
+        LOGI("Drone disarmed");
+    }
+    *was_armed = is_armed;
+
+    // Update calibration instruction text (must be in OSD thread for sync)
+    pthread_mutex_lock(&lvgl_mutex);
+    uint8_t arm_count = ht_antenna_tracker_get_arm_count();
+    bool gps_valid = ht_antenna_tracker_is_gps_valid();
+
+    if (g_setting.ht.enable && gps_valid) {
+        if (arm_count == 0) {
+            lv_label_set_text(g_osd_hdzero.calibration_instruction[0], "Arm at user position");
+            lv_label_set_text(g_osd_hdzero.calibration_instruction[1], "Arm at user position");
+            lv_obj_clear_flag(g_osd_hdzero.calibration_instruction[0], LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(g_osd_hdzero.calibration_instruction[1], LV_OBJ_FLAG_HIDDEN);
+        } else if (arm_count == 1) {
+            lv_label_set_text(g_osd_hdzero.calibration_instruction[0], "Arm at takeoff");
+            lv_label_set_text(g_osd_hdzero.calibration_instruction[1], "Arm at takeoff");
+            lv_obj_clear_flag(g_osd_hdzero.calibration_instruction[0], LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(g_osd_hdzero.calibration_instruction[1], LV_OBJ_FLAG_HIDDEN);
+        } else {
+            // Calibration complete, hide instruction
+            lv_obj_add_flag(g_osd_hdzero.calibration_instruction[0], LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(g_osd_hdzero.calibration_instruction[1], LV_OBJ_FLAG_HIDDEN);
+        }
+    } else {
+        // Head tracker disabled or no GPS, hide instruction
+        lv_obj_add_flag(g_osd_hdzero.calibration_instruction[0], LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(g_osd_hdzero.calibration_instruction[1], LV_OBJ_FLAG_HIDDEN);
+    }
+    pthread_mutex_unlock(&lvgl_mutex);
+}
+
 void *thread_osd(void *ptr) {
     static uint8_t fhd_d = 0;
     static bool was_armed = false;
@@ -1725,63 +1807,8 @@ void *thread_osd(void *ptr) {
             }
         }
 
-        // Parse GPS coordinates from OSD first (updates GPS data)
-        osd_parse_gps_data();
-
-        // Detect armed state
-        bool is_armed = osd_detect_armed();
-
-        // Check if armed state should be reset (after calibration reset)
-        if (reset_armed_state) {
-            was_armed = is_armed; // Sync to current state
-            reset_armed_state = false;
-            LOGI("Armed state detection reset, current state: %s", is_armed ? "ARMED" : "DISARMED");
-        }
-
-        // Auto-calibrate on arm (rising edge)
-        // Two-point calibration: first arm = user position, second arm = takeoff position
-        if (is_armed && !was_armed) {
-            // GPS coordinates have already been parsed by osd_parse_gps_data()
-            // Trigger calibration event with the current GPS data
-            if (ht_antenna_tracker_is_gps_valid()) {
-                uint8_t arm_count = ht_antenna_tracker_get_arm_count();
-                LOGI("Drone armed (arm #%d) - triggering antenna tracker calibration step", arm_count + 1);
-                ht_antenna_tracker_on_arm_event();
-            } else {
-                LOGW("Drone armed but no valid GPS fix - cannot calibrate");
-            }
-        } else if (!is_armed && was_armed) {
-            LOGI("Drone disarmed");
-        }
-        was_armed = is_armed;
-
-        // Update calibration instruction text (must be in OSD thread for sync)
-        pthread_mutex_lock(&lvgl_mutex);
-        uint8_t arm_count = ht_antenna_tracker_get_arm_count();
-        bool gps_valid = ht_antenna_tracker_is_gps_valid();
-
-        if (g_setting.ht.enable && gps_valid) {
-            if (arm_count == 0) {
-                lv_label_set_text(g_osd_hdzero.calibration_instruction[0], "Arm at user position");
-                lv_label_set_text(g_osd_hdzero.calibration_instruction[1], "Arm at user position");
-                lv_obj_clear_flag(g_osd_hdzero.calibration_instruction[0], LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(g_osd_hdzero.calibration_instruction[1], LV_OBJ_FLAG_HIDDEN);
-            } else if (arm_count == 1) {
-                lv_label_set_text(g_osd_hdzero.calibration_instruction[0], "Arm at takeoff");
-                lv_label_set_text(g_osd_hdzero.calibration_instruction[1], "Arm at takeoff");
-                lv_obj_clear_flag(g_osd_hdzero.calibration_instruction[0], LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(g_osd_hdzero.calibration_instruction[1], LV_OBJ_FLAG_HIDDEN);
-            } else {
-                // Calibration complete, hide instruction
-                lv_obj_add_flag(g_osd_hdzero.calibration_instruction[0], LV_OBJ_FLAG_HIDDEN);
-                lv_obj_add_flag(g_osd_hdzero.calibration_instruction[1], LV_OBJ_FLAG_HIDDEN);
-            }
-        } else {
-            // Head tracker disabled or no GPS, hide instruction
-            lv_obj_add_flag(g_osd_hdzero.calibration_instruction[0], LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_flag(g_osd_hdzero.calibration_instruction[1], LV_OBJ_FLAG_HIDDEN);
-        }
-        pthread_mutex_unlock(&lvgl_mutex);
+        // Handle GPS parsing and antenna tracker calibration
+        handle_gps_and_calibration(&was_armed);
     }
     return NULL;
 }
