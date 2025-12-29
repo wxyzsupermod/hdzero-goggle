@@ -455,21 +455,21 @@ void ht_antenna_tracker_update_gps(double latitude, double longitude, float alti
     ht_data.gps_data.latitude = latitude;
     ht_data.gps_data.longitude = longitude;
     ht_data.gps_data.altitude = altitude;
-    ht_data.gps_data.valid = valid;
+    // Once we receive valid GPS data, keep using it indefinitely
+    // The drone doesn't teleport - stale GPS is better than no GPS
     if (valid) {
+        ht_data.gps_data.valid = true;
         ht_data.gps_data.last_update_time = time(NULL);
     }
+    // Note: We don't set valid=false when OSD blanks during arm
+    // This allows antenna tracker to work through OSD blanking events
 }
 
 bool ht_antenna_tracker_is_gps_valid() {
-    // GPS is valid if marked valid and updated within last 3 seconds
-    // This handles Betaflight OSD blanking during arm event
-    if (ht_data.gps_data.valid) {
-        time_t now = time(NULL);
-        time_t age = now - ht_data.gps_data.last_update_time;
-        return age <= 3; // GPS valid for 3 seconds after last update
-    }
-    return false;
+    // For antenna tracking, we keep the last known GPS position indefinitely
+    // This handles Betaflight OSD blanking during arm events and other temporary signal loss
+    // The drone's position doesn't change drastically during brief GPS interruptions
+    return ht_data.gps_data.valid;
 }
 
 void ht_antenna_tracker_calibrate() {
@@ -610,17 +610,33 @@ void ht_antenna_tracker_on_arm_event() {
         ht_data.antenna_tracker.takeoff_longitude = ht_data.gps_data.longitude;
         ht_data.antenna_tracker.takeoff_altitude = ht_data.gps_data.altitude;
 
+        // CRITICAL: Set user altitude to 0 because Betaflight resets altitude to 0 at arm
+        // When disarmed: GPS altitude is absolute (above sea level)
+        // When armed: GPS altitude is relative to takeoff position (0m at ground)
+        // Since we calibrate at the second arm (takeoff), all future altitudes will be
+        // relative to this point, so user altitude must be 0
+        ht_data.antenna_tracker.user_altitude = 0.0f;
+
         ht_data.antenna_tracker.arm_count = 2;
         ht_data.antenna_tracker.is_calibrated = true;
         ht_data.antenna_tracker.legacy_mode = false;
 
+        // Save current tilt angle BEFORE resetting center position
+        // This offset represents how far from horizontal the user was looking during calibration
+        ht_data.antenna_tracker.tilt_offset = ht_data.tiltAngle;
+
+        LOGI("Pre-calibration angles: pan=%.1f°, tilt=%.1f°, roll=%.1f°",
+             ht_data.panAngle, ht_data.tiltAngle, ht_data.rollAngle);
+
         // Reset compass center position to align with calibration
-        // This sets the current heading as the home position (0°)
+        // This sets the current heading/tilt as the home position (0°)
         ht_set_center_position();
 
-        // No need to store offsets since we've reset the center
+        LOGI("Post-calibration angles: pan=%.1f°, tilt=%.1f°, roll=%.1f°",
+             ht_data.panAngle, ht_data.tiltAngle, ht_data.rollAngle);
+
+        // Pan offset is now 0 since we reset the center
         ht_data.antenna_tracker.pan_offset = 0.0f;
-        ht_data.antenna_tracker.tilt_offset = 0.0f;
 
         double distance = ht_calculate_distance(
             ht_data.antenna_tracker.user_latitude,
@@ -749,9 +765,35 @@ float ht_get_drone_elevation() {
     // Calculate elevation angle
     double elevation = atan2(vertical_distance, horizontal_distance) * RAD_TO_DEG;
 
-    // Add tilt offset from calibration
-    // This accounts for user not pointing perfectly level during calibration
-    elevation += ht_data.antenna_tracker.tilt_offset;
+    // Subtract tilt offset from calibration to convert to IMU reference frame
+    // tilt_offset is the angle the user's head was at during second arm calibration
+    // After calling ht_set_center_position(), that viewing angle became the new 0° reference
+    // The geometric elevation (atan2) is relative to true horizontal
+    // We subtract the offset to convert from true horizontal to the IMU's shifted coordinate system
+    // Example: User looked down -20° during calib (tilt_offset=-20°), this became new 0°
+    // If drone is at +10° from true horizontal, in IMU coords: +10° - (-20°) = +30°
+    // If drone is at -30° from true horizontal, in IMU coords: -30° - (-20°) = -10°
+    double elevation_before_offset = elevation;
+    elevation -= ht_data.antenna_tracker.tilt_offset;
+
+    // Detailed logging for debugging elevation calculation
+    static int log_counter = 0;
+    if (++log_counter % 50 == 0) { // Log every 50th call to avoid spam
+        LOGI("Elevation calc: drone_alt=%.1fm, user_alt=%.1fm, vert_dist=%.1fm",
+             ht_data.gps_data.altitude,
+             ht_data.antenna_tracker.user_altitude,
+             vertical_distance);
+        LOGI("  horiz_dist=%.1fm, raw_elev=%.1f°, tilt_offset=%.1f°, final_elev=%.1f°",
+             horizontal_distance,
+             elevation_before_offset,
+             ht_data.antenna_tracker.tilt_offset,
+             elevation);
+        LOGI("  GPS: lat=%.6f, lon=%.6f | User: lat=%.6f, lon=%.6f",
+             ht_data.gps_data.latitude,
+             ht_data.gps_data.longitude,
+             ht_data.antenna_tracker.user_latitude,
+             ht_data.antenna_tracker.user_longitude);
+    }
 
     return (float)elevation;
 }

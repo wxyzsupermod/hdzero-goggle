@@ -1594,6 +1594,25 @@ void osd_parse_gps_data() {
 
             // Look for altitude symbol (0x7F)
             if (ch == SYM_ALTITUDE && col < HD_HMAX - 8) {
+                // Log character dump for debugging
+                char debug_chars[80];
+                int debug_pos = 0;
+                for (int j = col; j < col + 12 && j < HD_HMAX; j++) {
+                    debug_pos += snprintf(debug_chars + debug_pos, sizeof(debug_chars) - debug_pos, "%02X ", fc_osd[row][j]);
+                }
+                
+                // Write to SD card log
+                FILE *fp = fopen("/mnt/extsd/gps_debug.log", "a");
+                if (fp) {
+                    time_t now = time(NULL);
+                    struct tm *t = localtime(&now);
+                    fprintf(fp, "[%02d:%02d:%02d] ALT SYMBOL at [%d,%d]: %s\n",
+                            t->tm_hour, t->tm_min, t->tm_sec, row, col, debug_chars);
+                    fclose(fp);
+                }
+                
+                LOGD("Altitude symbol found at row %d, col %d: %s", row, col, debug_chars);
+                
                 // Parse altitude text
                 char alt_text[15];
                 int text_pos = 0;
@@ -1601,29 +1620,74 @@ void osd_parse_gps_data() {
 
                 for (int i = col + 1; i < col + 12 && i < HD_HMAX && parsing; i++) {
                     uint16_t c = fc_osd[row][i];
-                    if (c >= 0x20 && c <= 0x7E) {
+                    
+                    // Check for unit symbols FIRST (they are 0x0C and 0x0F, which are < 0x20)
+                    if (c == SYM_M || c == SYM_FT) {
+                        alt_text[text_pos] = '\0';
+                        // Convert feet to meters if needed
+                        float alt = atof(alt_text);
+                        if (c == SYM_FT) {
+                            alt *= 0.3048f; // Convert feet to meters
+                        }
+                        LOGI("Altitude parsed: text='%s' value=%.2f%s", 
+                             alt_text, alt, c == SYM_FT ? " (ft->m)" : "m");
+                        
+                        FILE *fp2 = fopen("/mnt/extsd/gps_debug.log", "a");
+                        if (fp2) {
+                            time_t now = time(NULL);
+                            struct tm *t = localtime(&now);
+                            fprintf(fp2, "[%02d:%02d:%02d] ALT PARSED: text='%s' value=%.2fm unit=0x%02X\n",
+                                    t->tm_hour, t->tm_min, t->tm_sec, alt_text, alt, c);
+                            fclose(fp2);
+                        }
+                        
+                        if (alt >= -500000.0f && alt <= 1000000.0f) { // Reasonable altitude range
+                            gps_alt = alt;
+                            alt_found = true;
+                        }
+                        parsing = false;
+                    } else if (c >= 0x20 && c <= 0x7E) {
+                        // ASCII printable character
                         char ascii = (char)c;
                         if ((ascii >= '0' && ascii <= '9') || ascii == '.' || ascii == '-' || ascii == ' ') {
                             if (text_pos < sizeof(alt_text) - 1) {
                                 alt_text[text_pos++] = ascii;
                             }
                         } else {
-                            // Check if it's a unit symbol (M or FT)
-                            if (c == SYM_M || c == SYM_FT) {
-                                // Convert feet to meters if needed
-                                float alt = atof(alt_text);
-                                if (c == SYM_FT) {
-                                    alt *= 0.3048f; // Convert feet to meters
-                                }
-                                if (alt >= -500.0f && alt <= 10000.0f) { // Reasonable altitude range
-                                    gps_alt = alt;
-                                    alt_found = true;
-                                }
+                            // Non-numeric, non-unit ASCII character - stop
+                            FILE *fp3 = fopen("/mnt/extsd/gps_debug.log", "a");
+                            if (fp3) {
+                                time_t now = time(NULL);
+                                struct tm *t = localtime(&now);
+                                fprintf(fp3, "[%02d:%02d:%02d] ALT PARSE STOPPED: char=0x%02X ('%c') at pos %d (after '%s')\n",
+                                        t->tm_hour, t->tm_min, t->tm_sec, c, ascii, i - col, alt_text);
+                                fclose(fp3);
                             }
                             parsing = false;
                         }
                     } else {
+                        // Non-ASCII, non-unit character
+                        FILE *fp4 = fopen("/mnt/extsd/gps_debug.log", "a");
+                        if (fp4) {
+                            time_t now = time(NULL);
+                            struct tm *t = localtime(&now);
+                            fprintf(fp4, "[%02d:%02d:%02d] ALT PARSE NON-ASCII: char=0x%02X at pos %d\n",
+                                    t->tm_hour, t->tm_min, t->tm_sec, c, i - col);
+                            fclose(fp4);
+                        }
                         parsing = false;
+                    }
+                }
+                
+                if (!alt_found && text_pos > 0) {
+                    alt_text[text_pos] = '\0';
+                    FILE *fp5 = fopen("/mnt/extsd/gps_debug.log", "a");
+                    if (fp5) {
+                        time_t now = time(NULL);
+                        struct tm *t = localtime(&now);
+                        fprintf(fp5, "[%02d:%02d:%02d] ALT NOT FOUND: accumulated text='%s' but no unit symbol\n",
+                                t->tm_hour, t->tm_min, t->tm_sec, alt_text);
+                        fclose(fp5);
                     }
                 }
             }
