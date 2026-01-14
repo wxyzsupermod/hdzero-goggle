@@ -21,6 +21,7 @@
 #include "core/app_state.h"
 #include "core/battery.h"
 #include "core/common.hh"
+#include "core/crsf_telemetry.h"
 #include "core/dvr.h"
 #include "core/elrs.h"
 #include "core/ht.h"
@@ -1583,9 +1584,6 @@ static bool parse_altitude(int row, int col, float *out_alt) {
     for (int j = col; j < col + 12 && j < HD_HMAX; j++) {
         debug_pos += snprintf(debug_chars + debug_pos, sizeof(debug_chars) - debug_pos, "%02X ", fc_osd[row][j]);
     }
-
-    LOGD("Altitude symbol found at row %d, col %d: %s", row, col, debug_chars);
-
     // Parse altitude text
     char alt_text[15];
     int text_pos = 0;
@@ -1603,8 +1601,6 @@ static bool parse_altitude(int row, int col, float *out_alt) {
             if (c == SYM_FT) {
                 alt *= 0.3048f; // Convert feet to meters
             }
-            LOGI("Altitude parsed: text='%s' value=%.2f%s",
-                 alt_text, alt, c == SYM_FT ? " (ft->m)" : "m");
 
             if (alt >= -500000.0f && alt <= 1000000.0f) { // Reasonable altitude range
                 *out_alt = alt;
@@ -1720,11 +1716,34 @@ bool osd_detect_armed() {
 // Handle GPS parsing, armed detection, and antenna tracker calibration
 // This encapsulates all GPS-related logic in the OSD thread
 static void handle_gps_and_calibration(bool *was_armed) {
-    // Parse GPS coordinates from OSD (updates GPS data)
-    osd_parse_gps_data();
+    bool is_armed = false;
 
-    // Detect armed state
-    bool is_armed = osd_detect_armed();
+    // Check for CRSF backpack telemetry first (higher priority, works with analog)
+    if (g_setting.elrs.enable && g_setting.elrs.backpack_telemetry) {
+        // CRSF telemetry is parsed automatically by the ELRS module
+        // GPS data is already being updated via crsf_telemetry_process_frame
+        // Check if we have valid CRSF GPS data (within last 5 seconds)
+        if (crsf_telemetry_is_gps_valid(5)) {
+            // Also check for armed state from CRSF telemetry
+            is_armed = crsf_telemetry_is_armed();
+
+            // Log telemetry source once
+            static bool logged_crsf_source = false;
+            if (!logged_crsf_source) {
+                LOGI("Using CRSF backpack telemetry for GPS data");
+                logged_crsf_source = true;
+            }
+        }
+    }
+
+    // Fall back to OSD parsing if no CRSF telemetry available
+    if (!crsf_telemetry_is_gps_valid(5)) {
+        // Parse GPS coordinates from OSD (updates GPS data)
+        osd_parse_gps_data();
+
+        // Detect armed state from OSD
+        is_armed = osd_detect_armed();
+    }
 
     // Check if armed state should be reset (after calibration reset)
     if (reset_armed_state) {

@@ -26,6 +26,7 @@
 enum {
     POS_VTX,
     POS_PWR,
+    POS_TELEMETRY,
     POS_WIFI,
     POS_BIND,
     POS_BACK,
@@ -41,6 +42,7 @@ static lv_obj_t *label_bind_status;
 static lv_obj_t *cancel_label;
 static lv_obj_t *btn_vtx_send;
 static btn_group_t elrs_group;
+static btn_group_t telemetry_group;
 static bool binding = false;
 
 static void update_visibility() {
@@ -53,10 +55,12 @@ static void update_visibility() {
         lv_obj_clear_state(btn_bind, STATE_DISABLED);
         lv_obj_clear_state(label_bind_status, STATE_DISABLED);
         lv_obj_clear_state(btn_vtx_send, STATE_DISABLED);
+        btn_group_enable(&telemetry_group, true);
 
         lv_obj_add_flag(pp_elrs.p_arr.panel[0], FLAG_SELECTABLE);
         lv_obj_add_flag(pp_elrs.p_arr.panel[2], FLAG_SELECTABLE);
         lv_obj_add_flag(pp_elrs.p_arr.panel[3], FLAG_SELECTABLE);
+        lv_obj_add_flag(pp_elrs.p_arr.panel[4], FLAG_SELECTABLE);
     } else {
         lv_obj_add_state(btn_wifi, STATE_DISABLED);
         lv_obj_add_state(label_wifi_status, STATE_DISABLED);
@@ -64,10 +68,12 @@ static void update_visibility() {
         lv_obj_add_state(btn_bind, STATE_DISABLED);
         lv_obj_add_state(label_bind_status, STATE_DISABLED);
         lv_obj_add_state(btn_vtx_send, STATE_DISABLED);
+        btn_group_enable(&telemetry_group, false);
 
         lv_obj_clear_flag(pp_elrs.p_arr.panel[0], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_elrs.p_arr.panel[2], FLAG_SELECTABLE);
         lv_obj_clear_flag(pp_elrs.p_arr.panel[3], FLAG_SELECTABLE);
+        lv_obj_clear_flag(pp_elrs.p_arr.panel[4], FLAG_SELECTABLE);
     }
 }
 
@@ -98,6 +104,8 @@ static lv_obj_t *page_elrs_create(lv_obj_t *parent, panel_arr_t *arr) {
 
     create_btn_group_item(&elrs_group, cont, 2, _lang("Backpack"), _lang("On"), _lang("Off"), "", "", POS_PWR);
     btn_group_set_sel(&elrs_group, !g_setting.elrs.enable);
+    create_btn_group_item(&telemetry_group, cont, 2, _lang("Telemetry"), _lang("On"), _lang("Off"), "", "", POS_TELEMETRY);
+    btn_group_set_sel(&telemetry_group, !g_setting.elrs.backpack_telemetry);
     snprintf(buf, sizeof(buf), "%s VTX", _lang("Send"));
     btn_vtx_send = create_label_item(cont, buf, 1, POS_VTX, 1);
     btn_wifi = create_label_item(cont, "WiFi", 1, POS_WIFI, 1);
@@ -183,6 +191,11 @@ static void page_elrs_on_click(uint8_t key, int sel) {
             disable_esp32();
 
         update_visibility();
+    } else if (sel == POS_TELEMETRY) {
+        btn_group_toggle_sel(&telemetry_group);
+        g_setting.elrs.backpack_telemetry = btn_group_get_sel(&telemetry_group) == 0;
+        settings_put_bool("elrs", "backpack_telemetry", g_setting.elrs.backpack_telemetry);
+        LOGI("Backpack telemetry %s", g_setting.elrs.backpack_telemetry ? "enabled" : "disabled");
     } else if (sel == POS_VTX) // Send VTX freq
     {
         msp_channel_update();

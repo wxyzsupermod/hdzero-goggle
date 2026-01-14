@@ -23,7 +23,7 @@
 static int sem_timedwait_compat(sem_t *sem, const struct timespec *abs_timeout) {
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
-    while (now.tv_sec < abs_timeout->tv_sec || 
+    while (now.tv_sec < abs_timeout->tv_sec ||
            (now.tv_sec == abs_timeout->tv_sec && now.tv_nsec < abs_timeout->tv_nsec)) {
         if (sem_trywait(sem) == 0) {
             return 0;
@@ -44,6 +44,7 @@ static int sem_timedwait_compat(sem_t *sem, const struct timespec *abs_timeout) 
 #include "core/app_state.h"
 #include "core/battery.h"
 #include "core/common.hh"
+#include "core/crsf_telemetry.h"
 #include "core/dvr.h"
 #include "core/ht.h"
 #include "core/msp_displayport.h"
@@ -64,6 +65,11 @@ static uint8_t input_buffer[MSP_PORT_INBUF_SIZE];
 static mspPacket_t packet;
 static uint8_t crc;
 
+// Debugging counters
+static uint32_t uart_byte_count = 0;
+static uint32_t msp_packet_count = 0;
+static uint32_t last_log_time = 0;
+
 static int fd_esp32 = -1;
 static sem_t response_semaphore;
 static mspPacket_t response_packet;
@@ -77,6 +83,7 @@ static uint16_t elrs_osd_overlay[HD_VMAX][HD_HMAX];
 
 void msp_process_packet();
 static void handle_osd(uint8_t *payload, uint8_t size);
+static void handle_crsf_telemetry(uint8_t *payload, uint8_t size);
 
 static const uint16_t freq_table[ANALOG_CHANNEL_NUM] = {
     5865, 5845, 5825, 5805, 5785, 5765, 5745, 5725, // A
@@ -89,12 +96,54 @@ static const uint16_t freq_table[ANALOG_CHANNEL_NUM] = {
 
 // Note: F8 and R7 are both same frequency (5880 MHz), so they are both mapped to 7.
 static const uint8_t hdzero_channel_map[ANALOG_CHANNEL_NUM] = {
-    0, 0, 0, 0, 0, 0, 0, 0,    // A
-    0, 0, 0, 0, 0, 0, 0, 0,    // B
-    9, 0, 0, 0, 0, 0, 0, 0,    // E
-    10, 11, 0, 12, 0, 0, 0, 7, // F
-    1, 2, 3, 4, 5, 6, 7, 8,    // R
-    0, 0, 0, 0, 0, 0, 0, 0,    // L
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0, // A
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0, // B
+    9,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0, // E
+    10,
+    11,
+    0,
+    12,
+    0,
+    0,
+    0,
+    7, // F
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8, // R
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0, // L
 };
 
 static int get_freq_index(uint16_t const freq) {
@@ -172,6 +221,9 @@ static void change_channel_analog(uint8_t const channel) {
 void elrs_init() {
     sem_init(&response_semaphore, 0, 0);
     input_state = MSP_IDLE;
+
+    // Initialize CRSF telemetry parser for backpack telemetry
+    crsf_telemetry_init();
 }
 
 void esp32_handler_set_uart(uint32_t fd_uart) {
@@ -191,6 +243,19 @@ uint8_t msp_crc8_dvb_s2(uint8_t crc, uint8_t a) {
 }
 
 bool esp32_handler_process_byte(uint8_t c) {
+    uart_byte_count++;
+    
+    // Log packet/byte statistics every 5 seconds
+    time_t now = time(NULL);
+    if (last_log_time == 0 || now - last_log_time >= 5) {
+        if (msp_packet_count > 0 || uart_byte_count > 0) {
+            LOGI("ELRS UART: %u bytes received, %u MSP packets processed", uart_byte_count, msp_packet_count);
+        }
+        last_log_time = now;
+        uart_byte_count = 0;
+        msp_packet_count = 0;
+    }
+    
     bool processed_byte = false;
     switch (input_state) {
 
@@ -282,6 +347,8 @@ bool esp32_handler_process_byte(uint8_t c) {
         input_state = MSP_IDLE;
         // Assert that the checksums match
         if (crc == c) {
+            msp_packet_count++;
+            LOGD("MSP CRC valid - processing packet (function=0x%04X)", packet.function);
             msp_process_packet();
         } else {
             LOGE("CRC failure on MSP packet - Got %d expected %d", c, crc);
@@ -295,6 +362,7 @@ bool esp32_handler_process_byte(uint8_t c) {
     }
 
     if (processed_byte || input_state != MSP_IDLE) {
+        // Uncomment for very verbose logging of every byte:
         // LOGI("Processed %02x %d", c, input_state);
         return true;
     }
@@ -309,6 +377,10 @@ void esp32_handler_timeout() {
 }
 
 void msp_process_packet() {
+    // Log all incoming MSP commands
+    LOGD("MSP packet received: function=0x%04X, type=%d, payload_size=%d", 
+         packet.function, packet.type, packet.payload_size);
+    
     if (packet.type == MSP_PACKET_COMMAND) {
         switch (packet.function) {
         case MSP_GET_BAND_CHAN: {
@@ -424,6 +496,18 @@ void msp_process_packet() {
                 rd.min = packet.payload[4];
                 rd.sec = packet.payload[5];
                 rtc_set_clock(&rd);
+            }
+            break;
+        case MSP_ELRS_BACKPACK_CRSF_TLM:
+            // Handle CRSF telemetry frames forwarded from ELRS backpack via ESP-NOW
+            LOGD("Received MSP_ELRS_BACKPACK_CRSF_TLM: %d bytes, setting enabled=%d", packet.payload_size, g_setting.elrs.backpack_telemetry);
+            if (packet.payload_size > 0) {
+                LOGD("Frame start byte: 0x%02X", packet.payload[0]);
+            }
+            if (g_setting.elrs.backpack_telemetry && packet.payload_size > 0) {
+                handle_crsf_telemetry(packet.payload, packet.payload_size);
+            } else if (!g_setting.elrs.backpack_telemetry) {
+                LOGW("CRSF telemetry received but setting is disabled");
             }
             break;
         }
@@ -566,5 +650,24 @@ static void handle_osd(uint8_t payload[], uint8_t size) {
         memcpy(elrs_osd, elrs_osd_overlay, sizeof(elrs_osd));
         osd_signal_update();
         break;
+    }
+}
+
+/**
+ * Handle CRSF telemetry frames received from ELRS backpack via ESP-NOW
+ * The payload contains raw CRSF frame data that needs to be parsed
+ */
+static void handle_crsf_telemetry(uint8_t *payload, uint8_t size) {
+    if (size < 4) {
+        LOGW("CRSF telemetry frame too short: %d bytes", size);
+        return;
+    }
+
+    LOGI("Processing CRSF frame: %d bytes, sync=0x%02X", size, payload[0]);
+    // Process the raw CRSF frame through the telemetry parser
+    if (crsf_telemetry_process_frame(payload, size)) {
+        LOGD("CRSF telemetry frame processed successfully");
+    } else {
+        LOGW("Failed to process CRSF frame");
     }
 }

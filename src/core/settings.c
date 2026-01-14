@@ -87,6 +87,7 @@ const setting_t g_setting_defaults = {
     },
     .elrs = {
         .enable = false,
+        .backpack_telemetry = false,
     },
     .ease = {
         .no_dial = 0,
@@ -463,6 +464,7 @@ void settings_load(void) {
 
     // elrs
     g_setting.elrs.enable = settings_get_bool("elrs", "enable", g_setting_defaults.elrs.enable);
+    g_setting.elrs.backpack_telemetry = settings_get_bool("elrs", "backpack_telemetry", g_setting_defaults.elrs.backpack_telemetry);
 
     // clock
     g_setting.clock.year = ini_getl("clock", "year", g_setting_defaults.clock.year, SETTING_INI);

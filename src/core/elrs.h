@@ -33,27 +33,28 @@ typedef struct __attribute__((packed)) {
     uint16_t payload_size;
 } mspHeaderV2_t;
 
-#define MSP_GET_BAND_CHAN  0x0300
-#define MSP_SET_BAND_CHAN  0x0301
-#define MSP_GET_FREQ       0x0302
-#define MSP_SET_FREQ       0x0303
-#define MSP_GET_REC_STATE  0x0304
-#define MSP_SET_REC_STATE  0x0305
-#define MSP_GET_VRX_MODE   0x0306
-#define MSP_SET_VRX_MODE   0x0307
-#define MSP_GET_RSSI       0x0308
-#define MSP_GET_BAT_VOLTS  0x0309
-#define MSP_GET_VERSION    0x030A
-#define MSP_SET_BUZZER     0x030B
-#define MSP_SET_HT_ENABLE  0x030D
-#define MSP_SET_RTC        0x030E
-#define MSP_SET_OSD_ELEM   0x00B6
-#define MSP_SET_MODE       0x0380 // goggles to backpack
-#define MSP_GET_BP_VERSION 0x0381 // goggles to backpack
-#define MSP_GET_BP_STATUS  0x0382 // goggles to backpack
-#define MSP_SET_PTR        0x0383 // goggles to backpack
-#define MSP_RAW_GPS        0x006A // Get GPS coordinates
-#define MSP_COMP_GPS       0x0075 // Get GPS and compass data
+#define MSP_GET_BAND_CHAN          0x0300
+#define MSP_SET_BAND_CHAN          0x0301
+#define MSP_GET_FREQ               0x0302
+#define MSP_SET_FREQ               0x0303
+#define MSP_GET_REC_STATE          0x0304
+#define MSP_SET_REC_STATE          0x0305
+#define MSP_GET_VRX_MODE           0x0306
+#define MSP_SET_VRX_MODE           0x0307
+#define MSP_GET_RSSI               0x0308
+#define MSP_GET_BAT_VOLTS          0x0309
+#define MSP_GET_VERSION            0x030A
+#define MSP_SET_BUZZER             0x030B
+#define MSP_SET_HT_ENABLE          0x030D
+#define MSP_SET_RTC                0x030E
+#define MSP_SET_OSD_ELEM           0x00B6
+#define MSP_SET_MODE               0x0380 // goggles to backpack
+#define MSP_GET_BP_VERSION         0x0381 // goggles to backpack
+#define MSP_GET_BP_STATUS          0x0382 // goggles to backpack
+#define MSP_SET_PTR                0x0383 // goggles to backpack
+#define MSP_RAW_GPS                0x006A // Get GPS coordinates
+#define MSP_COMP_GPS               0x0075 // Get GPS and compass data
+#define MSP_ELRS_BACKPACK_CRSF_TLM 0x0380 // CRSF telemetry from ELRS backpack via ESP-NOW
 
 #define MSP_PORT_INBUF_SIZE 64
 

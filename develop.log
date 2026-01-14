@@ -1,0 +1,815 @@
+=== develop.sh started at Sun Feb  1 18:46:40 GMT 2026 ===
+Checking for SD card executable...
+Found /mnt/extsd/HDZGOGGLE - launching from SD card
+-rwxr-xr-x    1 root     root        2.5M Jan  7 20:23 /mnt/extsd/HDZGOGGLE
+Launched HDZGOGGLE from SD card (PID: 932)
+=== develop.sh completed ===
+2026-02-01 18:46:41.082 [INFO][dup2SeldomUsedFd.c:dup2SeldomUsedFdInit:20] gFdLock init
+WARNING: awplayer <log_set_level:30>: Set log level to 3
+DEBUG  : awplayer <ReadPluginEntry:194>: read plugin entry adecoder-0 fail!
+DEBUG  : awplayer <CdxPluginLoadList:221>: have config 0 entry
+DEBUG  : awplayer <CdxPluginLoadList:222>: start to open adecoder lib
+DEBUG  : awplayer <CdxPluginLoadList:202>: Load Plugin list vdecoder
+DEBUG  : awplayer <ReadPluginEntry:178>: read plugin entry vdecoder-0 ok.
+DEBUG  : awplayer <ReadPluginEntry:178>: read plugin entry vdecoder-1 ok.
+DEBUG  : awplayer <ReadPluginEntry:178>: read plugin entry vdecoder-2 ok.
+DEBUG  : awplayer <ReadPluginEntry:194>: read plugin entry vdecoder-3 fail!
+DEBUG  : awplayer <CdxPluginLoadList:221>: have config 3 entry
+DEBUG  : awplayer <CdxPluginLoadList:222>: start to open vdecoder lib
+DEBUG  : awplayer <DlOpenPlugin:96>: plugin vdecoder.h264 comment is "h264_vdecoder"
+DEBUG  : awplayer <DlOpenPlugin:97>: plugin open lib: libawh264.so
+DEBUG  : awplayer <DlOpenPlugin:116>: plugin init : CedarPluginVDInit
+DEBUG  : awplayer <DlOpenPlugin:96>: plugin vdecoder.h265 comment is "h265_vdecoder"
+DEBUG  : awplayer <DlOpenPlugin:97>: plugin open lib: libawh265.so
+DEBUG  : awplayer <DlOpenPlugin:116>: plugin init : CedarPluginVDInit
+DEBUG  : awplayer <DlOpenPlugin:96>: plugin vdecoder.mjpegplus comment is "mjpegplus_vdecoder"
+DEBUG  : awplayer <DlOpenPlugin:97>: plugin open lib: libawmjpegplus.so
+DEBUG  : awplayer <DlOpenPlugin:116>: plugin init : CedarPluginVDInit
+DEBUG  : awplayer <CdxPluginLoadList:202>: Load Plugin list plugin
+DEBUG  : awplayer <ReadPluginEntry:194>: read plugin entry plugin-0 fail!
+DEBUG  : awplayer <CdxPluginLoadList:221>: have config 0 entry
+DEBUG  : awplayer <CdxPluginLoadList:222>: start to open plugin lib
+2026-02-01 18:46:41.223 [ERROR][language.c:language_init:75] Failed to open /mnt/app/language/en_us.ini
+2026-02-01 18:46:41.241 [ERROR][language.c:language_init:75] Failed to open /mnt/app/language/es_es.ini
+2026-02-01 18:46:41.241 [ERROR][language.c:language_init:75] Failed to open /mnt/app/language/de_de.ini
+2026-02-01 18:46:41.254 [INFO][system.c:system_exec:12] System Execute: cp /mnt/extsd/pclk_phase.cfg /etc/pclk_phase.cfg
+cp: can't stat '/mnt/extsd/pclk_phase.cfg': No such file or directory
+2026-02-01 18:46:41.272 [INFO][system.c:system_exec:12] System Execute: rm /mnt/extsd/pclk_phase.cfg
+rm: can't remove '/mnt/extsd/pclk_phase.cfg': No such file or directory
+2026-02-01 18:46:41.287 [INFO][hardware-goggle2.c:pclk_phase_read_file:157] pclk_phase_read_file: /etc/pclk_phase.cfg
+2026-02-01 18:46:41.288 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_VERSION    0x00000001
+2026-02-01 18:46:41.288 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_MENU_UI    0x00000004
+2026-02-01 18:46:41.288 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDZERO_IN_720P60_50    0x00000000
+2026-02-01 18:46:41.289 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDZERO_IN_720P90    0x00000000
+2026-02-01 18:46:41.289 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDZERO_IN_1080P30    0x00000000
+2026-02-01 18:46:41.289 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_AV_IN    0x00000000
+2026-02-01 18:46:41.289 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDMI_IN_1080P50    0x00000000
+2026-02-01 18:46:41.289 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDMI_IN_1080P60    0x00000000
+2026-02-01 18:46:41.289 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDMI_IN_1080POTHER    0x00000000
+2026-02-01 18:46:41.289 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDMI_IN_720P50    0x00000000
+2026-02-01 18:46:41.289 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDMI_IN_720P60    0x00000000
+2026-02-01 18:46:41.289 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDMI_IN_720P100    0x00000000
+2026-02-01 18:46:41.289 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_TP2825_EX    0x00000000
+2026-02-01 18:46:41.289 [INFO][rtc.c:rtc_init:189] rtc_init has detected a battery
+2026-02-01 18:46:41.293 [INFO][system.c:system_exec:12] System Execute: aww 0x030019ec 0x00010001
+write 0x030019ec 0x00010001 > 0x00010001
+2026-02-01 18:46:41.315 [INFO][system.c:system_exec:12] System Execute: aww 0x05070008 0x00000001
+write 0x05070008 0x00000001 > 0x00000001
+2026-02-01 18:46:41.336 [INFO][mcp3021.c:aduc_read_voltage:60] Voltage ADC is aduc
+2026-02-01 18:46:41.337 [INFO][input_device.c:input_device_init:671] opened /dev/input/event0
+2026-02-01 18:46:41.337 [INFO][input_device.c:input_device_init:671] opened /dev/input/event1
+2026-02-01 18:46:41.337 [INFO][common.c:bmi2_interface_init:95] I2C Interface 
+2026-02-01 18:46:42.023 [INFO][accel_gyro.c:init_bmi270:74] init_bmi270 done.
+2026-02-01 18:46:42.042 [INFO][accel_gyro.c:enable_bmi270:88] [Pass] BMI270 enabled.
+2026-02-01 18:46:42.252 [INFO][tp2825-goggle2.c:TP2825_init:76] TP2825 init: is_av_in=1, is_pal=0
+2026-02-01 18:46:42.252 [INFO][fans.c:fans_top_setspeed:32] fans_top_setspeed: 4
+2026-02-01 18:46:42.252 [INFO][crsf_telemetry.c:crsf_telemetry_init:233] CRSF Telemetry parser initialized
+2026-02-01 18:46:42.284 [INFO][ui_porting.c:lvgl_init_porting:126] register disp drv
+2026-02-01 18:46:42.306 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Scan Now
+2026-02-01 18:46:42.339 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.339 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Source
+2026-02-01 18:46:42.357 [INFO][page_source.c:page_source_create:184] pp_source.p_arr.max: 9
+2026-02-01 18:46:42.357 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.357 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Image Setting
+2026-02-01 18:46:42.363 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.363 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry OSD
+2026-02-01 18:46:42.371 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.371 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Power
+2026-02-01 18:46:42.381 [INFO][page_power.c:page_power_update_cell_count:59] cell_count:3
+2026-02-01 18:46:42.381 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.381 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Fans
+2026-02-01 18:46:42.386 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.386 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Record Option
+2026-02-01 18:46:42.396 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.396 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Auto Scan
+2026-02-01 18:46:42.401 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.401 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry ELRS
+2026-02-01 18:46:42.407 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.407 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry WiFi Module
+2026-02-01 18:46:42.428 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.428 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Head Tracker
+2026-02-01 18:46:42.439 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.439 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Playback
+2026-02-01 18:46:42.442 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.442 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Storage
+2026-02-01 18:46:42.447 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.447 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Firmware   
+2026-02-01 18:46:42.466 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.466 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Focus Chart
+2026-02-01 18:46:42.482 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.482 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Clock
+2026-02-01 18:46:42.488 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.488 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Input
+2026-02-01 18:46:42.493 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.493 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Analog RSSI
+2026-02-01 18:46:42.497 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.497 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Go Sleep!
+2026-02-01 18:46:42.497 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:46:42.704 [INFO][screen-google2.c:screen_start_up:106] OLED temp test: 0xD0 L = f  f  80f0  f0  f0  
+2026-02-01 18:46:42.704 [INFO][screen-google2.c:screen_start_up:107] OLED temp test: 0xD0 R = f  f  e2  80e2  e2  
+2026-02-01 18:46:42.728 [INFO][screen-google2.c:screen_start_up:137] OLED temp test modified: 0xD0 L = f  f  f0  f0  f0  
+2026-02-01 18:46:42.728 [INFO][screen-google2.c:screen_start_up:138] OLED temp test modified: 0xD0 R = f  800f  e2  e2  e2  
+2026-02-01 18:46:42.728 [INFO][system.c:system_exec:12] System Execute: dispw -s vdpo 1080p50
+2026-02-01 18:46:43.836 [INFO][system.c:system_exec:12] System Execute: aww 0x0300b340 0x00000008
+write 0x0300b340 0x00000008 > 0x00000008
+2026-02-01 18:46:43.851 [INFO][hardware-goggle2.c:pclk_phase_set:518] pclk_phase_set 4
+2026-02-01 18:46:43.852 [INFO][system.c:system_exec:12] System Execute: aww 0x06542008 0x0000000b
+write 0x06542008 0x0000000b > 0x0000000b
+2026-02-01 18:46:43.863 [INFO][system.c:system_exec:12] System Execute: aww 0x06601004 0x010100a0
+write 0x06601004 0x010100a0 > 0x010100a0
+2026-02-01 18:46:43.877 [INFO][system.c:system_exec:12] System Execute: aww 0x0300b084 0x00002aaa
+write 0x0300b084 0x00002aaa > 0x00002aaa
+2026-02-01 18:46:43.889 [INFO][system.c:system_exec:12] System Execute: aww 0x06542018 0x00000044
+write 0x06542018 0x00000044 > 0x00000044
+2026-02-01 18:46:43.924 [INFO][screen-google2.c:screen_display:169] OLED: Display off
+2026-02-01 18:46:43.964 [INFO][screen-google2.c:screen_display:163] OLED: Display on
+2026-02-01 18:46:43.964 [INFO][osd.c:load_fc_osd_font_bmp:1330] load_fc_osd_font_bmp: /mnt/extsd/resource/OSD/FC/BTFL_000.bmp...
+2026-02-01 18:46:43.964 [ERROR][osd.c:load_fc_osd_font:1470]  failed!
+2026-02-01 18:46:43.965 [INFO][osd.c:load_fc_osd_font_bmp:1330] load_fc_osd_font_bmp: /mnt/app/resource/OSD/FC/BTFL_000.bmp...
+2026-02-01 18:46:44.133 [INFO][osd.c:load_fc_osd_font:1467]  succecss!
+2026-02-01 18:46:44.186 [INFO][osd.c:load_fc_osd_font_bmp:1330] load_fc_osd_font_bmp: /mnt/extsd/resource/OSD/FC/BTFL_FHD_000.bmp...
+2026-02-01 18:46:44.186 [ERROR][osd.c:load_fc_osd_font:1470]  failed!
+2026-02-01 18:46:44.186 [INFO][osd.c:load_fc_osd_font_bmp:1330] load_fc_osd_font_bmp: /mnt/app/resource/OSD/FC/BTFL_FHD_000.bmp...
+2026-02-01 18:46:44.541 [INFO][osd.c:load_fc_osd_font:1467]  succecss!
+2026-02-01 18:46:44.710 [INFO][system.c:system_exec:12] System Execute: aww 0x0300b084 0x0001555
+write 0x0300b084 0x0001555 > 0x00001555
+2026-02-01 18:46:44.722 [INFO][system.c:system_exec:12] System Execute: aww 0x05070004 0xffbc0000
+write 0x05070004 0xffbc0000 > 0xffbc0000
+2026-02-01 18:46:44.735 [INFO][rtc6715.c:rtc6715_power:65] RTC6715 power off
+2026-02-01 18:46:44.747 [INFO][rtc6715.c:rtc6715_audio:71] RTC6715 audio off
+2026-02-01 18:46:44.747 [INFO][system.c:system_exec:12] System Execute: aww 0x05002814 0x00000008
+write 0x05002814 0x00000008 > 0x00000008
+2026-02-01 18:46:44.875 [INFO][dm6302.c:DM6302_init:1686] Init0 done
+2026-02-01 18:46:44.880 [INFO][dm6302.c:DM6302_EFUSE1:1251] EFUSE1 1, s1
+2026-02-01 18:46:44.892 [INFO][dm6302.c:DM6302_EFUSE1:1273] EFUSE1 1, s2
+2026-02-01 18:46:44.957 [INFO][dm6302.c:DM6302_EFUSE1:1294] EFUSE1 1, s3, 2
+2026-02-01 18:46:44.980 [INFO][dm6302.c:DM6302_EFUSE1:1325] EFUSE1 1, s3-2
+2026-02-01 18:46:45.109 [INFO][dm6302.c:DM6302_EFUSE1:1325] EFUSE1 1, s3-3
+2026-02-01 18:46:45.217 [INFO][dm6302.c:DM6302_EFUSE1:1353] EFUSE1 1, s4
+2026-02-01 18:46:45.224 [INFO][dm6302.c:DM6302_init:1702] EFUSE1 1 done
+2026-02-01 18:46:45.228 [INFO][dm6302.c:DM6302_EFUSE1:1251] EFUSE1 2, s1
+2026-02-01 18:46:45.241 [INFO][dm6302.c:DM6302_EFUSE1:1273] EFUSE1 2, s2
+2026-02-01 18:46:45.305 [INFO][dm6302.c:DM6302_EFUSE1:1294] EFUSE1 2, s3, 2
+2026-02-01 18:46:45.327 [INFO][dm6302.c:DM6302_EFUSE1:1325] EFUSE1 2, s3-2
+2026-02-01 18:46:45.455 [INFO][dm6302.c:DM6302_EFUSE1:1325] EFUSE1 2, s3-3
+2026-02-01 18:46:45.563 [INFO][dm6302.c:DM6302_EFUSE1:1353] EFUSE1 2, s4
+2026-02-01 18:46:45.569 [INFO][dm6302.c:DM6302_init:1705] EFUSE1 2 done
+2026-02-01 18:46:45.604 [INFO][dm6302.c:DM6302_init:1708] Init1 done
+2026-02-01 18:46:45.640 [INFO][dm6302.c:DM6302_init:1711] Init2 done
+2026-02-01 18:46:45.659 [INFO][dm6302.c:DM6302_init:1714] Init3 done
+2026-02-01 18:46:45.693 [INFO][dm6302.c:DM6302_init:1717] Init4 done
+2026-02-01 18:46:45.706 [INFO][dm6302.c:DM6302_init:1720] Init5 done
+2026-02-01 18:46:45.719 [INFO][dm6302.c:DM6302_init:1723] Init6 done
+2026-02-01 18:46:45.772 [INFO][dm6302.c:DM6302_init:1726] Init7 done
+2026-02-01 18:46:45.837 [INFO][dm6302.c:DM6302_init:1729] Init8 done
+2026-02-01 18:46:45.857 [INFO][dm6302.c:DM6302_init:1732] Init9 done
+2026-02-01 18:46:45.890 [INFO][dm6302.c:DM6302_init:1735] Init10 done
+2026-02-01 18:46:45.903 [INFO][dm6302.c:DM6302_init:1738] Init11 done
+2026-02-01 18:46:45.944 [INFO][dm6302.c:DM6302_init:1741] Init12 done
+2026-02-01 18:46:45.959 [INFO][dm6302.c:DM6302_init:1744] Init13 done
+2026-02-01 18:46:46.032 [INFO][dm6302.c:DM6302_init:1747] Init14 done
+2026-02-01 18:46:46.035 [INFO][dm6302.c:DM6302_EFUSE2:1400]  rx1: start=960, stop=9b3;  rx2: start=960, stop=9b3
+2026-02-01 18:46:46.035 [INFO][dm6302.c:DM6302_EFUSE2:1400]  rx1: start=160c, stop=172b;  rx2: start=160c, stop=172b
+2026-02-01 18:46:46.041 [INFO][dm6302.c:DM6302_EFUSE2:1431] iqmismatch[0]=fd6f014c
+2026-02-01 18:46:46.041 [INFO][dm6302.c:DM6302_EFUSE2:1432] iqmismatch[1]=fece006e
+2026-02-01 18:46:46.041 [INFO][dm6302.c:DM6302_EFUSE2:1433] iqmismatch[2]=88ff79
+2026-02-01 18:46:46.042 [INFO][dm6302.c:DM6302_EFUSE2:1434] im2=8102040d
+2026-02-01 18:46:46.048 [INFO][dm6302.c:DM6302_EFUSE2:1466] iqmismatch[0]=fd4901ab
+2026-02-01 18:46:46.048 [INFO][dm6302.c:DM6302_EFUSE2:1467] iqmismatch[1]=febb0093
+2026-02-01 18:46:46.048 [INFO][dm6302.c:DM6302_EFUSE2:1468] iqmismatch[2]=4fff74
+2026-02-01 18:46:46.048 [INFO][dm6302.c:DM6302_EFUSE2:1469] im2=8102040d
+2026-02-01 18:46:46.049 [INFO][dm6302.c:DM6302_init:1750] EFUSE2 1 done
+2026-02-01 18:46:46.051 [INFO][dm6302.c:DM6302_EFUSE2:1400]  rx1: start=960, stop=9b3;  rx2: start=960, stop=9b3
+2026-02-01 18:46:46.051 [INFO][dm6302.c:DM6302_EFUSE2:1400]  rx1: start=160c, stop=172b;  rx2: start=160c, stop=172b
+2026-02-01 18:46:46.058 [INFO][dm6302.c:DM6302_EFUSE2:1431] iqmismatch[0]=fc760120
+2026-02-01 18:46:46.058 [INFO][dm6302.c:DM6302_EFUSE2:1432] iqmismatch[1]=fe69003e
+2026-02-01 18:46:46.058 [INFO][dm6302.c:DM6302_EFUSE2:1433] iqmismatch[2]=aeff5c
+2026-02-01 18:46:46.058 [INFO][dm6302.c:DM6302_EFUSE2:1434] im2=8102040d
+2026-02-01 18:46:46.065 [INFO][dm6302.c:DM6302_EFUSE2:1466] iqmismatch[0]=fee200d2
+2026-02-01 18:46:46.065 [INFO][dm6302.c:DM6302_EFUSE2:1467] iqmismatch[1]=ff4b0063
+2026-02-01 18:46:46.065 [INFO][dm6302.c:DM6302_EFUSE2:1468] iqmismatch[2]=21ffa1
+2026-02-01 18:46:46.065 [INFO][dm6302.c:DM6302_EFUSE2:1469] im2=8102040d
+2026-02-01 18:46:46.065 [INFO][dm6302.c:DM6302_init:1753] EFUSE2 2 done
+2026-02-01 18:46:46.178 [INFO][dm6302.c:DM6302_init:1756] DCOC 1 done
+2026-02-01 18:46:46.294 [INFO][dm6302.c:DM6302_init:1759] DCOC 2 done
+2026-02-01 18:46:46.589 [INFO][dm6302.c:DM6302_init:1762] M0 done
+2026-02-01 18:46:46.589 [INFO][system.c:system_exec:12] System Execute: aww 0x05002814 0x00000058
+write 0x05002814 0x00000058 > 0x00000058
+2026-02-01 18:46:46.603 [INFO][hardware-goggle2.c:HDZero_open:742] HDZero: open
+2026-02-01 18:46:46.603 [INFO][app_state.c:app_switch_to_hdzero:191] switch to bw:0, band:0, ch:1, CAM_MODE=1 4:3=0
+2026-02-01 18:46:46.686 [INFO][screen-google2.c:screen_display:169] OLED: Display off
+2026-02-01 18:46:46.686 [INFO][system.c:system_exec:12] System Execute: dispw -s vdpo 720p60
+2026-02-01 18:46:47.837 [INFO][hardware-goggle2.c:pclk_phase_set:518] pclk_phase_set 0
+2026-02-01 18:46:47.838 [INFO][system.c:system_exec:12] System Execute: aww 0x06542008 0x00000003
+write 0x06542008 0x00000003 > 0x00000003
+2026-02-01 18:46:47.850 [INFO][system.c:system_exec:12] System Execute: aww 0x06601004 0x010100a0
+write 0x06601004 0x010100a0 > 0x010100a0
+2026-02-01 18:46:47.881 [INFO][screen-google2.c:screen_vtmg:204] OLED: Set to mode 1.
+2026-02-01 18:46:47.929 [INFO][screen-google2.c:screen_display:163] OLED: Display on
+2026-02-01 18:46:47.929 [INFO][system.c:system_exec:12] System Execute: aww 0x06542018 0x00000044
+write 0x06542018 0x00000044 > 0x00000044
+2026-02-01 18:46:48.020 [INFO][dvr.c:dvr_update_vi_conf:161] update_record_vi_conf: fmt=1
+2026-02-01 18:46:48.020 [INFO][system.c:system_script:17] System Script: /mnt/app/app/record/gogglecmd -rec stopl
+2026-02-01 18:46:48.037 [INFO][esp32.c:enable_esp32:86] [ESP32] Powering on
+2026-02-01 18:46:48.038 [INFO][esp32.c:pthread_recv_esp32:46] UART3:starting reader thread
+2026-02-01 18:46:48.100 [DEBUG][esp32.c:esp32_rx:128] [ESP] ets Jun  8 2016 00:22:57
+2026-02-01 18:46:48.100 [DEBUG][esp32.c:esp32_rx:128] [ESP] 
+2026-02-01 18:46:48.100 [DEBUG][esp32.c:esp32_rx:128] [ESP] rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+2026-02-01 18:46:48.100 [DEBUG][esp32.c:esp32_rx:128] [ESP] configsip: 188777542, SPIWP:0xee
+2026-02-01 18:46:48.111 [DEBUG][esp32.c:esp32_rx:128] [ESP] clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+2026-02-01 18:46:48.111 [DEBUG][esp32.c:esp32_rx:128] [ESP] mode:DIO, clock div:2
+2026-02-01 18:46:48.111 [DEBUG][esp32.c:esp32_rx:128] [ESP] load:0x3fff0030,len:1184
+2026-02-01 18:46:48.116 [DEBUG][esp32.c:esp32_rx:128] [ESP] load:0x40078000,len:13132
+2026-02-01 18:46:48.116 [DEBUG][esp32.c:esp32_rx:128] [ESP] load:0x40080400,len:3036
+2026-02-01 18:46:48.116 [DEBUG][esp32.c:esp32_rx:128] [ESP] entry 0x400805e4
+2026-02-01 18:46:48.201 [INFO][fans.c:fans_top_setspeed:32] fans_top_setspeed: 2
+2026-02-01 18:46:48.201 [INFO][fans.c:fans_left_setspeed:41] fans_left_setspeed: 2
+2026-02-01 18:46:48.201 [INFO][fans.c:fans_right_setspeed:49] fans_right_setspeed: 2
+2026-02-01 18:46:48.202 [INFO][page_fans.c:adj_speed:301] Top Fan speed: 1 (T=0)
+2026-02-01 18:46:48.202 [INFO][fans.c:fans_top_setspeed:32] fans_top_setspeed: 1
+2026-02-01 18:46:48.205 [INFO][system.c:system_exec:12] System Execute: chmod +x /tmp/wlan_start_ap.sh
+2026-02-01 18:46:48.222 [INFO][system.c:system_exec:12] System Execute: chmod +x /tmp/wlan_start_sta.sh
+2026-02-01 18:46:48.257 [INFO][system.c:system_exec:12] System Execute: chmod +x /tmp/root_pw_set.sh; /tmp/root_pw_set.sh
+Changing password for root
+New password: 
+Retype password: 
+passwd: password for root changed by root
+2026-02-01 18:46:49.453 [INFO][thread.c:check_source_signal:185] Signal accquired
+2026-02-01 18:46:49.453 [INFO][dvr.c:dvr_cmd:312] dvr_cmd: sdcard=1, recording=0, cmd=2
+2026-02-01 18:46:49.453 [INFO][dvr.c:dvr_update_record_conf:215] CAM_MODE=1
+2026-02-01 18:46:49.457 [INFO][system.c:system_exec:12] System Execute: /mnt/app/script/audio_sel.sh in_mic1
+numid=30,iface=MIXER,name='AIF1 AD0L Mixer ADCL Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=32,iface=MIXER,name='AIF1 AD0R Mixer ADCR Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=53,iface=MIXER,name='LADC input Mixer MIC1 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=58,iface=MIXER,name='RADC input Mixer MIC1 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=54,iface=MIXER,name='LADC input Mixer MIC2 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=59,iface=MIXER,name='RADC input Mixer MIC2 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=55,iface=MIXER,name='LADC input Mixer LINEINL Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=60,iface=MIXER,name='RADC input Mixer LINEINR Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=53,iface=MIXER,name='LADC input Mixer MIC1 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=on
+numid=58,iface=MIXER,name='RADC input Mixer MIC1 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=on
+numid=30,iface=MIXER,name='AIF1 AD0L Mixer ADCL Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=on
+numid=32,iface=MIXER,name='AIF1 AD0R Mixer ADCR Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=on
+2026-02-01 18:46:50.478 [INFO][system.c:system_script:17] System Script: /mnt/app/app/record/gogglecmd -rec start
+2026-02-01 18:46:52.638 [INFO][hardware-goggle2.c:HDZERO_detect:803] cam_4_3: 1  CAM_MODE=1
+2026-02-01 18:46:56.044 [INFO][input_device.c:btn_press:245] btn_press (10)
+2026-02-01 18:46:56.051 [INFO][dvr.c:dvr_cmd:312] dvr_cmd: sdcard=1, recording=1, cmd=1
+2026-02-01 18:46:56.051 [INFO][system.c:system_script:17] System Script: /mnt/app/app/record/gogglecmd -rec stop
+2026-02-01 18:46:58.079 [INFO][dvr.c:dvr_update_vi_conf:161] update_record_vi_conf: fmt=7
+2026-02-01 18:46:58.102 [INFO][screen-google2.c:screen_display:169] OLED: Display off
+2026-02-01 18:46:58.102 [INFO][system.c:system_exec:12] System Execute: dispw -s vdpo 1080p50
+2026-02-01 18:46:59.196 [INFO][system.c:system_exec:12] System Execute: aww 0x0300b340 0x00000008
+write 0x0300b340 0x00000008 > 0x00000008
+2026-02-01 18:46:59.210 [INFO][hardware-goggle2.c:pclk_phase_set:518] pclk_phase_set 4
+2026-02-01 18:46:59.211 [INFO][system.c:system_exec:12] System Execute: aww 0x06542008 0x0000000b
+write 0x06542008 0x0000000b > 0x0000000b
+2026-02-01 18:46:59.231 [INFO][system.c:system_exec:12] System Execute: aww 0x06601004 0x010100a0
+write 0x06601004 0x010100a0 > 0x010100a0
+2026-02-01 18:46:59.246 [INFO][screen-google2.c:screen_vtmg:204] OLED: Set to mode 0.
+2026-02-01 18:46:59.246 [INFO][system.c:system_exec:12] System Execute: aww 0x0300b084 0x00002aaa
+write 0x0300b084 0x00002aaa > 0x00002aaa
+2026-02-01 18:46:59.260 [INFO][system.c:system_exec:12] System Execute: aww 0x06542018 0x00000044
+write 0x06542018 0x00000044 > 0x00000044
+2026-02-01 18:46:59.312 [INFO][screen-google2.c:screen_display:163] OLED: Display on
+2026-02-01 18:46:59.313 [INFO][ui_main_menu.c:menu_reinit:226] menu_reinit
+2026-02-01 18:46:59.395 [INFO][hardware-goggle2.c:HDZero_Close:752] HDZero: close
+2026-02-01 18:46:59.395 [INFO][system.c:system_exec:12] System Execute: aww 0x05070004 0xffbc0000
+write 0x05070004 0xffbc0000 > 0xffbc0000
+2026-02-01 18:46:59.404 [INFO][rtc6715.c:rtc6715_power:65] RTC6715 power off
+2026-02-01 18:46:59.416 [INFO][rtc6715.c:rtc6715_audio:71] RTC6715 audio off
+2026-02-01 18:46:59.416 [INFO][system.c:system_script:17] System Script: /mnt/app/app/record/gogglecmd -rec stopl
+2026-02-01 18:47:02.023 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:47:02.035 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 0
+2026-02-01 18:47:02.065 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:47:02.095 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 1
+2026-02-01 18:47:02.424 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:47:02.475 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 2
+2026-02-01 18:47:02.477 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:47:02.477 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 3
+2026-02-01 18:47:02.494 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:47:02.535 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 4
+2026-02-01 18:47:02.927 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:47:02.955 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 5
+2026-02-01 18:47:03.885 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:47:03.915 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 6
+2026-02-01 18:47:05.316 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:47:05.316 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 7
+2026-02-01 18:47:06.934 [INFO][input_device.c:btn_click:307] btn_click (0)
+2026-02-01 18:47:06.954 [INFO][input_device.c:btn_click:347] level = 1
+2026-02-01 18:47:07.445 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:07.454 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 1, 5
+2026-02-01 18:47:07.930 [INFO][input_device.c:roller_down:431] roller down (1)
+2026-02-01 18:47:07.935 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 0, 5
+2026-02-01 18:47:08.795 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:08.795 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 1, 5
+2026-02-01 18:47:08.832 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:08.855 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 2, 5
+2026-02-01 18:47:08.880 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:08.915 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 3, 5
+2026-02-01 18:47:08.958 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:08.975 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 4, 5
+2026-02-01 18:47:31.698 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:31.699 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 5, 5
+2026-02-01 18:47:32.413 [INFO][input_device.c:roller_down:431] roller down (1)
+2026-02-01 18:47:32.414 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 4, 5
+2026-02-01 18:47:34.954 [INFO][input_device.c:btn_click:307] btn_click (1)
+2026-02-01 18:47:38.711 [DEBUG][esp32.c:esp32_rx:128] [ESP] ets Jun  8 2016 00:22:57
+2026-02-01 18:47:38.711 [DEBUG][esp32.c:esp32_rx:128] [ESP] 
+2026-02-01 18:47:38.711 [DEBUG][esp32.c:esp32_rx:128] [ESP] rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+2026-02-01 18:47:38.711 [DEBUG][esp32.c:esp32_rx:128] [ESP] configsip: 188777542, SPIWP:0xee
+2026-02-01 18:47:38.722 [DEBUG][esp32.c:esp32_rx:128] [ESP] clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+2026-02-01 18:47:38.722 [DEBUG][esp32.c:esp32_rx:128] [ESP] mode:DIO, clock div:2
+2026-02-01 18:47:38.723 [DEBUG][esp32.c:esp32_rx:128] [ESP] load:0x3fff0030,len:1184
+2026-02-01 18:47:38.727 [DEBUG][esp32.c:esp32_rx:128] [ESP] load:0x40078000,len:13132
+2026-02-01 18:47:38.727 [DEBUG][esp32.c:esp32_rx:128] [ESP] load:0x40080400,len:3036
+2026-02-01 18:47:38.728 [DEBUG][esp32.c:esp32_rx:128] [ESP] entry 0x400805e4
+2026-02-01 18:47:42.240 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:42.295 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 5, 5
+2026-02-01 18:47:42.954 [INFO][input_device.c:btn_click:307] btn_click (1)
+2026-02-01 18:47:42.955 [INFO][ui_main_menu.c:submenu_exit:169] submenu_exit
+2026-02-01 18:47:43.705 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:47:43.735 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 8
+2026-02-01 18:47:46.010 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:47:46.015 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 9
+2026-02-01 18:47:46.052 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:47:46.074 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 10
+2026-02-01 18:47:46.217 [INFO][input_device.c:roller_down:431] roller down (0)
+2026-02-01 18:47:46.255 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 2,sel = 11
+2026-02-01 18:47:47.214 [INFO][input_device.c:btn_click:307] btn_click (0)
+2026-02-01 18:47:47.214 [INFO][input_device.c:btn_click:347] level = 1
+2026-02-01 18:47:48.771 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:48.815 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 1, 9
+2026-02-01 18:47:50.511 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:50.555 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 2, 9
+2026-02-01 18:47:50.904 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:50.915 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 3, 9
+2026-02-01 18:47:53.618 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:53.618 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 4, 9
+2026-02-01 18:47:55.294 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:55.335 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 5, 9
+2026-02-01 18:47:55.345 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:55.395 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 6, 9
+2026-02-01 18:47:55.411 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:55.455 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 7, 9
+2026-02-01 18:47:55.784 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:55.835 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 8, 9
+2026-02-01 18:47:55.835 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:47:55.835 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 9, 9
+2026-02-01 18:47:57.794 [INFO][input_device.c:btn_click:307] btn_click (1)
+2026-02-01 18:47:57.815 [INFO][ui_main_menu.c:submenu_exit:169] submenu_exit
+2026-02-01 18:47:57.815 [DEBUG][page_headtracker.c:page_headtracker_exit:498] page_headtracker_exit
+2026-02-01 18:47:57.815 [DEBUG][page_headtracker.c:page_headtracker_exit:502] page_headtracker_exit 2
+2026-02-01 18:47:57.815 [DEBUG][page_headtracker.c:page_headtracker_exit:511] page_headtracker_exit 3
+2026-02-01 18:47:57.815 [DEBUG][page_headtracker.c:page_headtracker_exit:513] page_headtracker_exit 4
+2026-02-01 18:47:58.361 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:47:58.375 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 10
+2026-02-01 18:47:59.141 [INFO][input_device.c:roller_down:431] roller down (0)
+2026-02-01 18:47:59.155 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 2,sel = 11
+2026-02-01 18:48:03.905 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:48:03.915 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 10
+2026-02-01 18:48:04.269 [INFO][input_device.c:roller_down:431] roller down (0)
+2026-02-01 18:48:04.274 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 2,sel = 11
+2026-02-01 18:48:04.814 [INFO][input_device.c:btn_click:307] btn_click (0)
+2026-02-01 18:48:04.834 [INFO][input_device.c:btn_click:347] level = 1
+2026-02-01 18:48:09.034 [INFO][input_device.c:btn_press:245] btn_press (1)
+2026-02-01 18:48:09.094 [INFO][ui_main_menu.c:submenu_exit:169] submenu_exit
+2026-02-01 18:48:09.095 [DEBUG][page_headtracker.c:page_headtracker_exit:498] page_headtracker_exit
+2026-02-01 18:48:09.095 [DEBUG][page_headtracker.c:page_headtracker_exit:502] page_headtracker_exit 2
+2026-02-01 18:48:09.095 [DEBUG][page_headtracker.c:page_headtracker_exit:511] page_headtracker_exit 3
+2026-02-01 18:48:09.095 [DEBUG][page_headtracker.c:page_headtracker_exit:513] page_headtracker_exit 4
+2026-02-01 18:48:09.095 [INFO][ui_main_menu.c:menu_reinit:226] menu_reinit
+2026-02-01 18:48:09.684 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:48:09.754 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 10
+2026-02-01 18:48:09.903 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:48:09.935 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 11
+2026-02-01 18:48:11.008 [INFO][input_device.c:roller_down:431] roller down (0)
+2026-02-01 18:48:11.015 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 2,sel = 12
+2026-02-01 18:48:11.662 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:48:11.675 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 11
+2026-02-01 18:48:12.564 [INFO][input_device.c:btn_click:307] btn_click (0)
+2026-02-01 18:48:12.594 [INFO][input_device.c:btn_click:347] level = 1
+2026-02-01 18:48:14.554 [INFO][input_device.c:btn_click:307] btn_click (1)
+2026-02-01 18:48:14.575 [INFO][ui_main_menu.c:submenu_exit:169] submenu_exit
+2026-02-01 18:48:15.434 [INFO][input_device.c:roller_down:431] roller down (0)
+2026-02-01 18:48:15.434 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 2,sel = 12
+2026-02-01 18:48:15.439 [INFO][input_device.c:roller_down:431] roller down (0)
+2026-02-01 18:48:15.439 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 2,sel = 11
+2026-02-01 18:48:15.440 [INFO][input_device.c:roller_down:431] roller down (0)
+2026-02-01 18:48:15.495 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 2,sel = 10
+2026-02-01 18:48:15.522 [INFO][input_device.c:roller_down:431] roller down (0)
+2026-02-01 18:48:15.555 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 2,sel = 9
+2026-02-01 18:48:15.852 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:48:15.875 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 8
+2026-02-01 18:48:15.942 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:48:15.995 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 9
+2026-02-01 18:48:16.044 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:48:16.055 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 10
+2026-02-01 18:48:16.811 [INFO][input_device.c:roller_down:431] roller down (0)
+2026-02-01 18:48:16.854 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 2,sel = 11
+2026-02-01 18:48:17.844 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:48:17.875 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 10
+2026-02-01 18:48:17.901 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:48:17.934 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 11
+2026-02-01 18:48:19.060 [INFO][input_device.c:roller_up:396] roller up (0)
+2026-02-01 18:48:19.115 [INFO][ui_main_menu.c:menu_nav:212] menu_nav: key = 1,sel = 12
+2026-02-01 18:48:24.034 [INFO][input_device.c:btn_click:307] btn_click (0)
+2026-02-01 18:48:24.034 [INFO][input_device.c:btn_click:347] level = 1
+2026-02-01 18:48:24.036 [INFO][page_version.c:generate_current_version:396] app: 9.5.1 rx0: 76 rx1: 76 va: 176
+2026-02-01 18:48:24.427 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:48:24.455 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 1, 5
+2026-02-01 18:48:24.778 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:48:24.815 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 2, 5
+2026-02-01 18:48:24.984 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:48:24.995 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 3, 5
+2026-02-01 18:48:25.408 [INFO][input_device.c:roller_up:396] roller up (1)
+2026-02-01 18:48:25.415 [INFO][ui_main_menu.c:submenu_roller:141] submenu_roller 4, 5
+=== develop.sh started at Sun Feb  1 18:58:59 GMT 2026 ===
+Checking for SD card executable...
+Found /mnt/extsd/HDZGOGGLE - launching from SD card
+-rwxr-xr-x    1 root     root        2.5M Jan  7 21:05 /mnt/extsd/HDZGOGGLE
+Launched HDZGOGGLE from SD card (PID: 932)
+=== develop.sh completed ===
+2026-02-01 18:59:00.895 [INFO][dup2SeldomUsedFd.c:dup2SeldomUsedFdInit:20] gFdLock init
+WARNING: awplayer <log_set_level:30>: Set log level to 3
+DEBUG  : awplayer <ReadPluginEntry:194>: read plugin entry adecoder-0 fail!
+DEBUG  : awplayer <CdxPluginLoadList:221>: have config 0 entry
+DEBUG  : awplayer <CdxPluginLoadList:222>: start to open adecoder lib
+DEBUG  : awplayer <CdxPluginLoadList:202>: Load Plugin list vdecoder
+DEBUG  : awplayer <ReadPluginEntry:178>: read plugin entry vdecoder-0 ok.
+DEBUG  : awplayer <ReadPluginEntry:178>: read plugin entry vdecoder-1 ok.
+DEBUG  : awplayer <ReadPluginEntry:178>: read plugin entry vdecoder-2 ok.
+DEBUG  : awplayer <ReadPluginEntry:194>: read plugin entry vdecoder-3 fail!
+DEBUG  : awplayer <CdxPluginLoadList:221>: have config 3 entry
+DEBUG  : awplayer <CdxPluginLoadList:222>: start to open vdecoder lib
+DEBUG  : awplayer <DlOpenPlugin:96>: plugin vdecoder.h264 comment is "h264_vdecoder"
+DEBUG  : awplayer <DlOpenPlugin:97>: plugin open lib: libawh264.so
+DEBUG  : awplayer <DlOpenPlugin:116>: plugin init : CedarPluginVDInit
+DEBUG  : awplayer <DlOpenPlugin:96>: plugin vdecoder.h265 comment is "h265_vdecoder"
+DEBUG  : awplayer <DlOpenPlugin:97>: plugin open lib: libawh265.so
+DEBUG  : awplayer <DlOpenPlugin:116>: plugin init : CedarPluginVDInit
+DEBUG  : awplayer <DlOpenPlugin:96>: plugin vdecoder.mjpegplus comment is "mjpegplus_vdecoder"
+DEBUG  : awplayer <DlOpenPlugin:97>: plugin open lib: libawmjpegplus.so
+DEBUG  : awplayer <DlOpenPlugin:116>: plugin init : CedarPluginVDInit
+DEBUG  : awplayer <CdxPluginLoadList:202>: Load Plugin list plugin
+DEBUG  : awplayer <ReadPluginEntry:194>: read plugin entry plugin-0 fail!
+DEBUG  : awplayer <CdxPluginLoadList:221>: have config 0 entry
+DEBUG  : awplayer <CdxPluginLoadList:222>: start to open plugin lib
+2026-02-01 18:59:01.017 [ERROR][language.c:language_init:75] Failed to open /mnt/app/language/en_us.ini
+2026-02-01 18:59:01.031 [ERROR][language.c:language_init:75] Failed to open /mnt/app/language/es_es.ini
+2026-02-01 18:59:01.031 [ERROR][language.c:language_init:75] Failed to open /mnt/app/language/de_de.ini
+2026-02-01 18:59:01.040 [INFO][system.c:system_exec:12] System Execute: cp /mnt/extsd/pclk_phase.cfg /etc/pclk_phase.cfg
+cp: can't stat '/mnt/extsd/pclk_phase.cfg': No such file or directory
+2026-02-01 18:59:01.054 [INFO][system.c:system_exec:12] System Execute: rm /mnt/extsd/pclk_phase.cfg
+rm: can't remove '/mnt/extsd/pclk_phase.cfg': No such file or directory
+2026-02-01 18:59:01.062 [INFO][hardware-goggle2.c:pclk_phase_read_file:157] pclk_phase_read_file: /etc/pclk_phase.cfg
+2026-02-01 18:59:01.063 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_VERSION    0x00000001
+2026-02-01 18:59:01.063 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_MENU_UI    0x00000004
+2026-02-01 18:59:01.063 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDZERO_IN_720P60_50    0x00000000
+2026-02-01 18:59:01.063 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDZERO_IN_720P90    0x00000000
+2026-02-01 18:59:01.063 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDZERO_IN_1080P30    0x00000000
+2026-02-01 18:59:01.063 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_AV_IN    0x00000000
+2026-02-01 18:59:01.063 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDMI_IN_1080P50    0x00000000
+2026-02-01 18:59:01.063 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDMI_IN_1080P60    0x00000000
+2026-02-01 18:59:01.064 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDMI_IN_1080POTHER    0x00000000
+2026-02-01 18:59:01.064 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDMI_IN_720P50    0x00000000
+2026-02-01 18:59:01.064 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDMI_IN_720P60    0x00000000
+2026-02-01 18:59:01.064 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_HDMI_IN_720P100    0x00000000
+2026-02-01 18:59:01.064 [INFO][hardware-goggle2.c:pclk_phase_read_file:174] VIDEO_SOURCE_TP2825_EX    0x00000000
+2026-02-01 18:59:01.064 [INFO][rtc.c:rtc_init:189] rtc_init has detected a battery
+2026-02-01 18:59:01.071 [INFO][system.c:system_exec:12] System Execute: aww 0x030019ec 0x00010001
+write 0x030019ec 0x00010001 > 0x00010001
+2026-02-01 18:59:01.091 [INFO][system.c:system_exec:12] System Execute: aww 0x05070008 0x00000001
+write 0x05070008 0x00000001 > 0x00000001
+2026-02-01 18:59:01.103 [INFO][mcp3021.c:aduc_read_voltage:60] Voltage ADC is aduc
+2026-02-01 18:59:01.103 [INFO][input_device.c:input_device_init:671] opened /dev/input/event0
+2026-02-01 18:59:01.103 [INFO][input_device.c:input_device_init:671] opened /dev/input/event1
+2026-02-01 18:59:01.103 [INFO][common.c:bmi2_interface_init:95] I2C Interface 
+2026-02-01 18:59:01.797 [INFO][accel_gyro.c:init_bmi270:74] init_bmi270 done.
+2026-02-01 18:59:01.815 [INFO][accel_gyro.c:enable_bmi270:88] [Pass] BMI270 enabled.
+2026-02-01 18:59:02.019 [INFO][tp2825-goggle2.c:TP2825_init:76] TP2825 init: is_av_in=1, is_pal=0
+2026-02-01 18:59:02.019 [INFO][fans.c:fans_top_setspeed:32] fans_top_setspeed: 4
+2026-02-01 18:59:02.019 [INFO][crsf_telemetry.c:crsf_telemetry_init:231] CRSF Telemetry parser initialized
+2026-02-01 18:59:02.038 [INFO][ui_porting.c:lvgl_init_porting:126] register disp drv
+2026-02-01 18:59:02.052 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Scan Now
+2026-02-01 18:59:02.075 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.075 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Source
+2026-02-01 18:59:02.091 [INFO][page_source.c:page_source_create:184] pp_source.p_arr.max: 9
+2026-02-01 18:59:02.091 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.091 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Image Setting
+2026-02-01 18:59:02.097 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.097 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry OSD
+2026-02-01 18:59:02.105 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.105 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Power
+2026-02-01 18:59:02.115 [INFO][page_power.c:page_power_update_cell_count:59] cell_count:3
+2026-02-01 18:59:02.115 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.115 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Fans
+2026-02-01 18:59:02.126 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.126 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Record Option
+2026-02-01 18:59:02.136 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.136 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Auto Scan
+2026-02-01 18:59:02.143 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.143 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry ELRS
+2026-02-01 18:59:02.150 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.150 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry WiFi Module
+2026-02-01 18:59:02.178 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.179 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Head Tracker
+2026-02-01 18:59:02.191 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.191 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Playback
+2026-02-01 18:59:02.195 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.195 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Storage
+2026-02-01 18:59:02.200 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.200 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Firmware   
+2026-02-01 18:59:02.221 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.221 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Focus Chart
+2026-02-01 18:59:02.241 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.241 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Clock
+2026-02-01 18:59:02.246 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.247 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Input
+2026-02-01 18:59:02.252 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.252 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Analog RSSI
+2026-02-01 18:59:02.255 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.255 [DEBUG][ui_main_menu.c:main_menu_create_entry:260] creating main menu entry Go Sleep!
+2026-02-01 18:59:02.256 [DEBUG][ui_main_menu.c:main_menu_create_entry:282] Done
+2026-02-01 18:59:02.466 [INFO][screen-google2.c:screen_start_up:106] OLED temp test: 0xD0 L = f  f  f0  80f0  f0  
+2026-02-01 18:59:02.466 [INFO][screen-google2.c:screen_start_up:107] OLED temp test: 0xD0 R = f  f  80e2  e2  e2  
+2026-02-01 18:59:02.490 [INFO][screen-google2.c:screen_start_up:137] OLED temp test modified: 0xD0 L = 800f  f  f0  80f0  f0  
+2026-02-01 18:59:02.490 [INFO][screen-google2.c:screen_start_up:138] OLED temp test modified: 0xD0 R = f  f  e2  e2  e2  
+2026-02-01 18:59:02.490 [INFO][system.c:system_exec:12] System Execute: dispw -s vdpo 1080p50
+2026-02-01 18:59:03.598 [INFO][system.c:system_exec:12] System Execute: aww 0x0300b340 0x00000008
+write 0x0300b340 0x00000008 > 0x00000008
+2026-02-01 18:59:03.614 [INFO][hardware-goggle2.c:pclk_phase_set:518] pclk_phase_set 4
+2026-02-01 18:59:03.615 [INFO][system.c:system_exec:12] System Execute: aww 0x06542008 0x0000000b
+write 0x06542008 0x0000000b > 0x0000000b
+2026-02-01 18:59:03.627 [INFO][system.c:system_exec:12] System Execute: aww 0x06601004 0x010100a0
+write 0x06601004 0x010100a0 > 0x010100a0
+2026-02-01 18:59:03.640 [INFO][system.c:system_exec:12] System Execute: aww 0x0300b084 0x00002aaa
+write 0x0300b084 0x00002aaa > 0x00002aaa
+2026-02-01 18:59:03.652 [INFO][system.c:system_exec:12] System Execute: aww 0x06542018 0x00000044
+write 0x06542018 0x00000044 > 0x00000044
+2026-02-01 18:59:03.686 [INFO][screen-google2.c:screen_display:169] OLED: Display off
+2026-02-01 18:59:03.726 [INFO][screen-google2.c:screen_display:163] OLED: Display on
+2026-02-01 18:59:03.726 [INFO][osd.c:load_fc_osd_font_bmp:1330] load_fc_osd_font_bmp: /mnt/extsd/resource/OSD/FC/BTFL_000.bmp...
+2026-02-01 18:59:03.726 [ERROR][osd.c:load_fc_osd_font:1470]  failed!
+2026-02-01 18:59:03.727 [INFO][osd.c:load_fc_osd_font_bmp:1330] load_fc_osd_font_bmp: /mnt/app/resource/OSD/FC/BTFL_000.bmp...
+2026-02-01 18:59:03.915 [INFO][osd.c:load_fc_osd_font:1467]  succecss!
+2026-02-01 18:59:03.977 [INFO][osd.c:load_fc_osd_font_bmp:1330] load_fc_osd_font_bmp: /mnt/extsd/resource/OSD/FC/BTFL_FHD_000.bmp...
+2026-02-01 18:59:03.977 [ERROR][osd.c:load_fc_osd_font:1470]  failed!
+2026-02-01 18:59:03.977 [INFO][osd.c:load_fc_osd_font_bmp:1330] load_fc_osd_font_bmp: /mnt/app/resource/OSD/FC/BTFL_FHD_000.bmp...
+2026-02-01 18:59:04.392 [INFO][osd.c:load_fc_osd_font:1467]  succecss!
+2026-02-01 18:59:04.575 [INFO][system.c:system_exec:12] System Execute: aww 0x0300b084 0x0001555
+write 0x0300b084 0x0001555 > 0x00001555
+2026-02-01 18:59:04.587 [INFO][system.c:system_exec:12] System Execute: aww 0x05070004 0xffbc0000
+write 0x05070004 0xffbc0000 > 0xffbc0000
+2026-02-01 18:59:04.600 [INFO][rtc6715.c:rtc6715_power:65] RTC6715 power off
+2026-02-01 18:59:04.612 [INFO][rtc6715.c:rtc6715_audio:71] RTC6715 audio off
+2026-02-01 18:59:04.612 [INFO][system.c:system_exec:12] System Execute: aww 0x05002814 0x00000008
+write 0x05002814 0x00000008 > 0x00000008
+2026-02-01 18:59:04.740 [INFO][dm6302.c:DM6302_init:1686] Init0 done
+2026-02-01 18:59:04.745 [INFO][dm6302.c:DM6302_EFUSE1:1251] EFUSE1 1, s1
+2026-02-01 18:59:04.758 [INFO][dm6302.c:DM6302_EFUSE1:1273] EFUSE1 1, s2
+2026-02-01 18:59:04.823 [INFO][dm6302.c:DM6302_EFUSE1:1294] EFUSE1 1, s3, 2
+2026-02-01 18:59:04.845 [INFO][dm6302.c:DM6302_EFUSE1:1325] EFUSE1 1, s3-2
+2026-02-01 18:59:04.975 [INFO][dm6302.c:DM6302_EFUSE1:1325] EFUSE1 1, s3-3
+2026-02-01 18:59:05.081 [INFO][dm6302.c:DM6302_EFUSE1:1353] EFUSE1 1, s4
+2026-02-01 18:59:05.087 [INFO][dm6302.c:DM6302_init:1702] EFUSE1 1 done
+2026-02-01 18:59:05.091 [INFO][dm6302.c:DM6302_EFUSE1:1251] EFUSE1 2, s1
+2026-02-01 18:59:05.103 [INFO][dm6302.c:DM6302_EFUSE1:1273] EFUSE1 2, s2
+2026-02-01 18:59:05.171 [INFO][dm6302.c:DM6302_EFUSE1:1294] EFUSE1 2, s3, 2
+2026-02-01 18:59:05.194 [INFO][dm6302.c:DM6302_EFUSE1:1325] EFUSE1 2, s3-2
+2026-02-01 18:59:05.329 [INFO][dm6302.c:DM6302_EFUSE1:1325] EFUSE1 2, s3-3
+2026-02-01 18:59:05.435 [INFO][dm6302.c:DM6302_EFUSE1:1353] EFUSE1 2, s4
+2026-02-01 18:59:05.442 [INFO][dm6302.c:DM6302_init:1705] EFUSE1 2 done
+2026-02-01 18:59:05.477 [INFO][dm6302.c:DM6302_init:1708] Init1 done
+2026-02-01 18:59:05.512 [INFO][dm6302.c:DM6302_init:1711] Init2 done
+2026-02-01 18:59:05.532 [INFO][dm6302.c:DM6302_init:1714] Init3 done
+2026-02-01 18:59:05.568 [INFO][dm6302.c:DM6302_init:1717] Init4 done
+2026-02-01 18:59:05.585 [INFO][dm6302.c:DM6302_init:1720] Init5 done
+2026-02-01 18:59:05.598 [INFO][dm6302.c:DM6302_init:1723] Init6 done
+2026-02-01 18:59:05.639 [INFO][dm6302.c:DM6302_init:1726] Init7 done
+2026-02-01 18:59:05.703 [INFO][dm6302.c:DM6302_init:1729] Init8 done
+2026-02-01 18:59:05.723 [INFO][dm6302.c:DM6302_init:1732] Init9 done
+2026-02-01 18:59:05.758 [INFO][dm6302.c:DM6302_init:1735] Init10 done
+2026-02-01 18:59:05.772 [INFO][dm6302.c:DM6302_init:1738] Init11 done
+2026-02-01 18:59:05.813 [INFO][dm6302.c:DM6302_init:1741] Init12 done
+2026-02-01 18:59:05.828 [INFO][dm6302.c:DM6302_init:1744] Init13 done
+2026-02-01 18:59:05.902 [INFO][dm6302.c:DM6302_init:1747] Init14 done
+2026-02-01 18:59:05.905 [INFO][dm6302.c:DM6302_EFUSE2:1400]  rx1: start=960, stop=9b3;  rx2: start=960, stop=9b3
+2026-02-01 18:59:05.905 [INFO][dm6302.c:DM6302_EFUSE2:1400]  rx1: start=160c, stop=172b;  rx2: start=160c, stop=172b
+2026-02-01 18:59:05.912 [INFO][dm6302.c:DM6302_EFUSE2:1431] iqmismatch[0]=fd6f014c
+2026-02-01 18:59:05.912 [INFO][dm6302.c:DM6302_EFUSE2:1432] iqmismatch[1]=fece006e
+2026-02-01 18:59:05.912 [INFO][dm6302.c:DM6302_EFUSE2:1433] iqmismatch[2]=88ff79
+2026-02-01 18:59:05.912 [INFO][dm6302.c:DM6302_EFUSE2:1434] im2=8102040d
+2026-02-01 18:59:05.918 [INFO][dm6302.c:DM6302_EFUSE2:1466] iqmismatch[0]=fd4901ab
+2026-02-01 18:59:05.918 [INFO][dm6302.c:DM6302_EFUSE2:1467] iqmismatch[1]=febb0093
+2026-02-01 18:59:05.918 [INFO][dm6302.c:DM6302_EFUSE2:1468] iqmismatch[2]=4fff74
+2026-02-01 18:59:05.918 [INFO][dm6302.c:DM6302_EFUSE2:1469] im2=8102040d
+2026-02-01 18:59:05.918 [INFO][dm6302.c:DM6302_init:1750] EFUSE2 1 done
+2026-02-01 18:59:05.921 [INFO][dm6302.c:DM6302_EFUSE2:1400]  rx1: start=960, stop=9b3;  rx2: start=960, stop=9b3
+2026-02-01 18:59:05.922 [INFO][dm6302.c:DM6302_EFUSE2:1400]  rx1: start=160c, stop=172b;  rx2: start=160c, stop=172b
+2026-02-01 18:59:05.928 [INFO][dm6302.c:DM6302_EFUSE2:1431] iqmismatch[0]=fc760120
+2026-02-01 18:59:05.928 [INFO][dm6302.c:DM6302_EFUSE2:1432] iqmismatch[1]=fe69003e
+2026-02-01 18:59:05.928 [INFO][dm6302.c:DM6302_EFUSE2:1433] iqmismatch[2]=aeff5c
+2026-02-01 18:59:05.928 [INFO][dm6302.c:DM6302_EFUSE2:1434] im2=8102040d
+2026-02-01 18:59:05.936 [INFO][dm6302.c:DM6302_EFUSE2:1466] iqmismatch[0]=fee200d2
+2026-02-01 18:59:05.936 [INFO][dm6302.c:DM6302_EFUSE2:1467] iqmismatch[1]=ff4b0063
+2026-02-01 18:59:05.936 [INFO][dm6302.c:DM6302_EFUSE2:1468] iqmismatch[2]=21ffa1
+2026-02-01 18:59:05.936 [INFO][dm6302.c:DM6302_EFUSE2:1469] im2=8102040d
+2026-02-01 18:59:05.936 [INFO][dm6302.c:DM6302_init:1753] EFUSE2 2 done
+2026-02-01 18:59:06.050 [INFO][dm6302.c:DM6302_init:1756] DCOC 1 done
+2026-02-01 18:59:06.169 [INFO][dm6302.c:DM6302_init:1759] DCOC 2 done
+2026-02-01 18:59:06.460 [INFO][dm6302.c:DM6302_init:1762] M0 done
+2026-02-01 18:59:06.460 [INFO][system.c:system_exec:12] System Execute: aww 0x05002814 0x00000058
+write 0x05002814 0x00000058 > 0x00000058
+2026-02-01 18:59:06.474 [INFO][hardware-goggle2.c:HDZero_open:742] HDZero: open
+2026-02-01 18:59:06.474 [INFO][app_state.c:app_switch_to_hdzero:191] switch to bw:0, band:0, ch:1, CAM_MODE=1 4:3=0
+2026-02-01 18:59:06.557 [INFO][screen-google2.c:screen_display:169] OLED: Display off
+2026-02-01 18:59:06.557 [INFO][system.c:system_exec:12] System Execute: dispw -s vdpo 720p60
+2026-02-01 18:59:07.679 [INFO][hardware-goggle2.c:pclk_phase_set:518] pclk_phase_set 0
+2026-02-01 18:59:07.680 [INFO][system.c:system_exec:12] System Execute: aww 0x06542008 0x00000003
+write 0x06542008 0x00000003 > 0x00000003
+2026-02-01 18:59:07.692 [INFO][system.c:system_exec:12] System Execute: aww 0x06601004 0x010100a0
+write 0x06601004 0x010100a0 > 0x010100a0
+2026-02-01 18:59:07.716 [INFO][screen-google2.c:screen_vtmg:204] OLED: Set to mode 1.
+2026-02-01 18:59:07.760 [INFO][screen-google2.c:screen_display:163] OLED: Display on
+2026-02-01 18:59:07.760 [INFO][system.c:system_exec:12] System Execute: aww 0x06542018 0x00000044
+write 0x06542018 0x00000044 > 0x00000044
+2026-02-01 18:59:07.850 [INFO][dvr.c:dvr_update_vi_conf:161] update_record_vi_conf: fmt=1
+2026-02-01 18:59:07.850 [INFO][system.c:system_script:17] System Script: /mnt/app/app/record/gogglecmd -rec stopl
+2026-02-01 18:59:07.866 [INFO][esp32.c:enable_esp32:86] [ESP32] Powering on
+2026-02-01 18:59:07.867 [INFO][esp32.c:pthread_recv_esp32:46] UART3:starting reader thread
+2026-02-01 18:59:07.929 [DEBUG][esp32.c:esp32_rx:128] [ESP] ets Jun  8 2016 00:22:57
+2026-02-01 18:59:07.929 [DEBUG][esp32.c:esp32_rx:128] [ESP] 
+2026-02-01 18:59:07.930 [DEBUG][esp32.c:esp32_rx:128] [ESP] rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+2026-02-01 18:59:07.930 [DEBUG][esp32.c:esp32_rx:128] [ESP] configsip: 188777542, SPIWP:0xee
+2026-02-01 18:59:07.940 [DEBUG][esp32.c:esp32_rx:128] [ESP] clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+2026-02-01 18:59:07.940 [DEBUG][esp32.c:esp32_rx:128] [ESP] mode:DIO, clock div:2
+2026-02-01 18:59:07.941 [DEBUG][esp32.c:esp32_rx:128] [ESP] load:0x3fff0030,len:1184
+2026-02-01 18:59:07.945 [DEBUG][esp32.c:esp32_rx:128] [ESP] load:0x40078000,len:13132
+2026-02-01 18:59:07.945 [DEBUG][esp32.c:esp32_rx:128] [ESP] load:0x40080400,len:3036
+2026-02-01 18:59:07.946 [DEBUG][esp32.c:esp32_rx:128] [ESP] entry 0x400805e4
+2026-02-01 18:59:08.029 [INFO][fans.c:fans_top_setspeed:32] fans_top_setspeed: 2
+2026-02-01 18:59:08.030 [INFO][fans.c:fans_left_setspeed:41] fans_left_setspeed: 2
+2026-02-01 18:59:08.030 [INFO][fans.c:fans_right_setspeed:49] fans_right_setspeed: 2
+2026-02-01 18:59:08.030 [INFO][page_fans.c:adj_speed:301] Top Fan speed: 1 (T=0)
+2026-02-01 18:59:08.030 [INFO][fans.c:fans_top_setspeed:32] fans_top_setspeed: 1
+2026-02-01 18:59:08.033 [INFO][system.c:system_exec:12] System Execute: chmod +x /tmp/wlan_start_ap.sh
+2026-02-01 18:59:08.043 [INFO][system.c:system_exec:12] System Execute: chmod +x /tmp/wlan_start_sta.sh
+2026-02-01 18:59:08.060 [INFO][system.c:system_exec:12] System Execute: chmod +x /tmp/root_pw_set.sh; /tmp/root_pw_set.sh
+Changing password for root
+New password: 
+Retype password: 
+passwd: password for root changed by root
+2026-02-01 18:59:09.237 [INFO][thread.c:check_source_signal:185] Signal accquired
+2026-02-01 18:59:09.237 [INFO][dvr.c:dvr_cmd:312] dvr_cmd: sdcard=1, recording=0, cmd=2
+2026-02-01 18:59:09.237 [INFO][dvr.c:dvr_update_record_conf:215] CAM_MODE=1
+2026-02-01 18:59:09.237 [INFO][system.c:system_exec:12] System Execute: /mnt/app/script/audio_sel.sh in_mic1
+numid=30,iface=MIXER,name='AIF1 AD0L Mixer ADCL Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=32,iface=MIXER,name='AIF1 AD0R Mixer ADCR Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=53,iface=MIXER,name='LADC input Mixer MIC1 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=58,iface=MIXER,name='RADC input Mixer MIC1 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=54,iface=MIXER,name='LADC input Mixer MIC2 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=59,iface=MIXER,name='RADC input Mixer MIC2 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=55,iface=MIXER,name='LADC input Mixer LINEINL Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=60,iface=MIXER,name='RADC input Mixer LINEINR Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=53,iface=MIXER,name='LADC input Mixer MIC1 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=on
+numid=58,iface=MIXER,name='RADC input Mixer MIC1 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=on
+numid=30,iface=MIXER,name='AIF1 AD0L Mixer ADCL Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=on
+numid=32,iface=MIXER,name='AIF1 AD0R Mixer ADCR Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=on
+2026-02-01 18:59:10.243 [INFO][system.c:system_script:17] System Script: /mnt/app/app/record/gogglecmd -rec start
+2026-02-01 18:59:16.739 [INFO][hardware-goggle2.c:HDZERO_detect:803] cam_4_3: 1  CAM_MODE=1
+2026-02-01 18:59:16.927 [INFO][osd.c:osd_parse_gps_data:1676] GPS coords parsed from OSD: LAT=42.6369338 LON=-83.0901400 ALT=0.0m
+2026-02-01 18:59:16.959 [INFO][hardware-goggle2.c:HDZERO_detect:766] CAM_mode: 1->3
+2026-02-01 18:59:16.982 [INFO][screen-google2.c:screen_display:169] OLED: Display off
+2026-02-01 18:59:16.982 [INFO][system.c:system_exec:12] System Execute: dispw -s vdpo 720p90
+2026-02-01 18:59:18.079 [INFO][hardware-goggle2.c:pclk_phase_set:518] pclk_phase_set 0
+2026-02-01 18:59:18.080 [INFO][system.c:system_exec:12] System Execute: aww 0x06542008 0x00000003
+write 0x06542008 0x00000003 > 0x00000003
+2026-02-01 18:59:18.134 [INFO][system.c:system_exec:12] System Execute: aww 0x06601004 0x010100a0
+write 0x06601004 0x010100a0 > 0x010100a0
+2026-02-01 18:59:18.266 [INFO][screen-google2.c:screen_display:163] OLED: Display on
+2026-02-01 18:59:18.266 [INFO][system.c:system_exec:12] System Execute: aww 0x06542018 0x00000044
+write 0x06542018 0x00000044 > 0x00000044
+2026-02-01 18:59:18.317 [INFO][dvr.c:dvr_update_vi_conf:161] update_record_vi_conf: fmt=3
+2026-02-01 18:59:18.317 [INFO][system.c:system_script:17] System Script: /mnt/app/app/record/gogglecmd -rec stopl
+2026-02-01 18:59:18.352 [INFO][thread.c:check_source_signal:156] HDZero VTMG change (A)
+
+2026-02-01 18:59:18.352 [INFO][dvr.c:dvr_cmd:312] dvr_cmd: sdcard=1, recording=1, cmd=1
+2026-02-01 18:59:18.352 [INFO][system.c:system_script:17] System Script: /mnt/app/app/record/gogglecmd -rec stop
+2026-02-01 18:59:20.385 [INFO][system.c:system_script:17] System Script: /mnt/app/app/record/gogglecmd -rec stopl
+2026-02-01 18:59:21.378 [INFO][thread.c:check_source_signal:185] Signal accquired
+2026-02-01 18:59:21.378 [INFO][dvr.c:dvr_cmd:312] dvr_cmd: sdcard=1, recording=0, cmd=2
+2026-02-01 18:59:21.378 [INFO][dvr.c:dvr_update_record_conf:215] CAM_MODE=3
+2026-02-01 18:59:21.380 [INFO][system.c:system_exec:12] System Execute: /mnt/app/script/audio_sel.sh in_mic1
+numid=30,iface=MIXER,name='AIF1 AD0L Mixer ADCL Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=32,iface=MIXER,name='AIF1 AD0R Mixer ADCR Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=53,iface=MIXER,name='LADC input Mixer MIC1 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=58,iface=MIXER,name='RADC input Mixer MIC1 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=54,iface=MIXER,name='LADC input Mixer MIC2 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=59,iface=MIXER,name='RADC input Mixer MIC2 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=55,iface=MIXER,name='LADC input Mixer LINEINL Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=60,iface=MIXER,name='RADC input Mixer LINEINR Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+numid=53,iface=MIXER,name='LADC input Mixer MIC1 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=on
+numid=58,iface=MIXER,name='RADC input Mixer MIC1 boost Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=on
+numid=30,iface=MIXER,name='AIF1 AD0L Mixer ADCL Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=on
+numid=32,iface=MIXER,name='AIF1 AD0R Mixer ADCR Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=on
+2026-02-01 18:59:22.339 [INFO][system.c:system_script:17] System Script: /mnt/app/app/record/gogglecmd -rec start
+2026-02-01 18:59:55.948 [INFO][osd.c:osd_parse_gps_data:1676] GPS coords parsed from OSD: LAT=42.6367947 LON=-83.0908752 ALT=0.0m
+2026-02-01 18:59:57.384 [INFO][osd.c:osd_parse_gps_data:1676] GPS coords parsed from OSD: LAT=42.6367819 LON=-83.0908981 ALT=0.0m
+2026-02-01 18:59:58.523 [INFO][osd.c:osd_parse_gps_data:1676] GPS coords parsed from OSD: LAT=42.6367734 LON=-83.0908880 ALT=0.0m
+2026-02-01 19:00:01.767 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='265.4' value=265.40m
+2026-02-01 19:00:01.768 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='265.4' value=265.40m
+2026-02-01 19:00:02.079 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='263.5' value=263.50m
+2026-02-01 19:00:02.158 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='262.5' value=262.50m
+2026-02-01 19:00:02.158 [INFO][osd.c:osd_parse_gps_data:1676] GPS coords parsed from OSD: LAT=42.6367786 LON=-83.0905666 ALT=262.5m
+2026-02-01 19:00:02.159 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='262.5' value=262.50m
+2026-02-01 19:00:02.159 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='262.5' value=262.50m
+2026-02-01 19:00:02.159 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='262.5' value=262.50m
+2026-02-01 19:00:02.874 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='262.5' value=262.50m
+2026-02-01 19:00:02.884 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='262.5' value=262.50m
+2026-02-01 19:00:02.956 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='262.5' value=262.50m
+2026-02-01 19:00:03.229 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='262.5' value=262.50m
+2026-02-01 19:00:03.279 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='262.5' value=262.50m
+2026-02-01 19:00:03.279 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='262.5' value=262.50m
+2026-02-01 19:00:03.279 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='262.5' value=262.50m
+2026-02-01 19:00:03.283 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='262.5' value=262.50m
+2026-02-01 19:00:03.367 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='253.5' value=253.50m
+2026-02-01 19:00:03.368 [INFO][osd.c:osd_parse_gps_data:1676] GPS coords parsed from OSD: LAT=42.6367821 LON=-83.0904689 ALT=253.5m
+2026-02-01 19:00:03.368 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='253.5' value=253.50m
+2026-02-01 19:00:03.368 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='253.5' value=253.50m
+2026-02-01 19:00:03.368 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='253.5' value=253.50m
+2026-02-01 19:00:03.368 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='253.5' value=253.50m
+2026-02-01 19:00:03.368 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='253.5' value=253.50m
+2026-02-01 19:00:03.369 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='253.5' value=253.50m
+2026-02-01 19:00:03.369 [INFO][osd.c:parse_altitude:1605] Altitude parsed: text='253.5' value=253.50m

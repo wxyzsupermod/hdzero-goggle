@@ -133,7 +133,8 @@ typedef struct {
 } setting_head_tracker_t;
 
 typedef struct {
-    bool enable;
+    bool enable;             // Enable ELRS backpack communication
+    bool backpack_telemetry; // Enable receiving telemetry via ESP-NOW/CRSF from backpack
 } setting_elrs_t;
 
 typedef enum {
