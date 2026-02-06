@@ -1,22 +1,22 @@
 #include "gps.h"
 #include "uart.h"
+#include <log/log.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <log/log.h>
 
-#define GPS_UART_PORT 0  // ttyS0
-#define UBX_SYNC1 0xB5
-#define UBX_SYNC2 0x62
+#define GPS_UART_PORT   0 // ttyS0
+#define UBX_SYNC1       0xB5
+#define UBX_SYNC2       0x62
 #define UBX_MAX_PAYLOAD 256
 
 // UBX message classes and IDs
-#define UBX_CLASS_NAV 0x01
-#define UBX_NAV_POSLLH 0x02  // Position (lat/lon/alt)
-#define UBX_NAV_STATUS 0x03  // Fix status
-#define UBX_NAV_SOL 0x06     // Navigation solution
-#define UBX_NAV_VELNED 0x12  // Velocity
+#define UBX_CLASS_NAV  0x01
+#define UBX_NAV_POSLLH 0x02 // Position (lat/lon/alt)
+#define UBX_NAV_STATUS 0x03 // Fix status
+#define UBX_NAV_SOL    0x06 // Navigation solution
+#define UBX_NAV_VELNED 0x12 // Velocity
 
 // UBX parser state
 typedef enum {
@@ -53,30 +53,32 @@ static void ubx_checksum(uint8_t byte, uint8_t *ck_a, uint8_t *ck_b) {
 
 // Parse UBX-NAV-POSLLH (0x01 0x02)
 static void parse_nav_posllh(const uint8_t *payload, uint16_t length) {
-    if (length < 28) return;
+    if (length < 28)
+        return;
 
     // iTOW (4 bytes) - skip
     // lon (4 bytes) - longitude in degrees * 1e7
-    int32_t lon = (int32_t)(payload[4] | (payload[5] << 8) | 
+    int32_t lon = (int32_t)(payload[4] | (payload[5] << 8) |
                             (payload[6] << 16) | (payload[7] << 24));
     // lat (4 bytes) - latitude in degrees * 1e7
-    int32_t lat = (int32_t)(payload[8] | (payload[9] << 8) | 
+    int32_t lat = (int32_t)(payload[8] | (payload[9] << 8) |
                             (payload[10] << 16) | (payload[11] << 24));
     // height (4 bytes) - height above ellipsoid in mm
-    int32_t height = (int32_t)(payload[12] | (payload[13] << 8) | 
+    int32_t height = (int32_t)(payload[12] | (payload[13] << 8) |
                                (payload[14] << 16) | (payload[15] << 24));
     // hMSL (4 bytes) - height above MSL in mm
-    int32_t hmsl = (int32_t)(payload[16] | (payload[17] << 8) | 
+    int32_t hmsl = (int32_t)(payload[16] | (payload[17] << 8) |
                              (payload[18] << 16) | (payload[19] << 24));
 
     gps_data.latitude = lat / 1e7;
     gps_data.longitude = lon / 1e7;
-    gps_data.altitude = hmsl / 1000.0f;  // mm to meters
+    gps_data.altitude = hmsl / 1000.0f; // mm to meters
 }
 
 // Parse UBX-NAV-STATUS (0x01 0x03)
 static void parse_nav_status(const uint8_t *payload, uint16_t length) {
-    if (length < 16) return;
+    if (length < 16)
+        return;
 
     // iTOW (4 bytes) - skip
     // gpsFix (1 byte) - 0=no fix, 2=2D, 3=3D
@@ -98,7 +100,8 @@ static void parse_nav_status(const uint8_t *payload, uint16_t length) {
 
 // Parse UBX-NAV-SOL (0x01 0x06)
 static void parse_nav_sol(const uint8_t *payload, uint16_t length) {
-    if (length < 52) return;
+    if (length < 52)
+        return;
 
     // iTOW (4 bytes) - skip
     // fTOW (4 bytes) - skip
@@ -124,131 +127,132 @@ static void parse_nav_sol(const uint8_t *payload, uint16_t length) {
 
 // Parse UBX-NAV-VELNED (0x01 0x12)
 static void parse_nav_velned(const uint8_t *payload, uint16_t length) {
-    if (length < 36) return;
+    if (length < 36)
+        return;
 
     // iTOW (4 bytes) - skip
     // velN (4 bytes) - north velocity cm/s
-    int32_t vel_n = (int32_t)(payload[4] | (payload[5] << 8) | 
+    int32_t vel_n = (int32_t)(payload[4] | (payload[5] << 8) |
                               (payload[6] << 16) | (payload[7] << 24));
     // velE (4 bytes) - east velocity cm/s
-    int32_t vel_e = (int32_t)(payload[8] | (payload[9] << 8) | 
+    int32_t vel_e = (int32_t)(payload[8] | (payload[9] << 8) |
                               (payload[10] << 16) | (payload[11] << 24));
     // gSpeed (4 bytes) at offset 20 - ground speed cm/s
-    int32_t g_speed = (int32_t)(payload[20] | (payload[21] << 8) | 
+    int32_t g_speed = (int32_t)(payload[20] | (payload[21] << 8) |
                                 (payload[22] << 16) | (payload[23] << 24));
     // heading (4 bytes) at offset 24 - heading degrees * 1e5
-    int32_t heading = (int32_t)(payload[24] | (payload[25] << 8) | 
+    int32_t heading = (int32_t)(payload[24] | (payload[25] << 8) |
                                 (payload[26] << 16) | (payload[27] << 24));
 
-    gps_data.speed = g_speed / 100.0f;  // cm/s to m/s
+    gps_data.speed = g_speed / 100.0f; // cm/s to m/s
     gps_data.heading = heading / 1e5f;
 }
 
 // Process complete UBX message
 static void process_ubx_message() {
     switch (ubx_class) {
-        case UBX_CLASS_NAV:
-            switch (ubx_id) {
-                case UBX_NAV_POSLLH:
-                    parse_nav_posllh(ubx_payload, ubx_length);
-                    break;
-                case UBX_NAV_STATUS:
-                    parse_nav_status(ubx_payload, ubx_length);
-                    break;
-                case UBX_NAV_SOL:
-                    parse_nav_sol(ubx_payload, ubx_length);
-                    break;
-                case UBX_NAV_VELNED:
-                    parse_nav_velned(ubx_payload, ubx_length);
-                    break;
-            }
+    case UBX_CLASS_NAV:
+        switch (ubx_id) {
+        case UBX_NAV_POSLLH:
+            parse_nav_posllh(ubx_payload, ubx_length);
             break;
+        case UBX_NAV_STATUS:
+            parse_nav_status(ubx_payload, ubx_length);
+            break;
+        case UBX_NAV_SOL:
+            parse_nav_sol(ubx_payload, ubx_length);
+            break;
+        case UBX_NAV_VELNED:
+            parse_nav_velned(ubx_payload, ubx_length);
+            break;
+        }
+        break;
     }
 }
 
 // Process incoming GPS data byte-by-byte
 static void process_gps_data(uint8_t byte) {
     switch (ubx_state) {
-        case UBX_STATE_IDLE:
-            if (byte == UBX_SYNC1) {
-                ubx_state = UBX_STATE_SYNC1;
-            }
-            break;
+    case UBX_STATE_IDLE:
+        if (byte == UBX_SYNC1) {
+            ubx_state = UBX_STATE_SYNC1;
+        }
+        break;
 
-        case UBX_STATE_SYNC1:
-            if (byte == UBX_SYNC2) {
-                ubx_state = UBX_STATE_CLASS;
-                ubx_ck_a = 0;
-                ubx_ck_b = 0;
-            } else {
-                ubx_state = UBX_STATE_IDLE;
-            }
-            break;
-
-        case UBX_STATE_CLASS:
-            ubx_class = byte;
-            ubx_checksum(byte, &ubx_ck_a, &ubx_ck_b);
-            ubx_state = UBX_STATE_ID;
-            break;
-
-        case UBX_STATE_ID:
-            ubx_id = byte;
-            ubx_checksum(byte, &ubx_ck_a, &ubx_ck_b);
-            ubx_state = UBX_STATE_LEN1;
-            break;
-
-        case UBX_STATE_LEN1:
-            ubx_length = byte;
-            ubx_checksum(byte, &ubx_ck_a, &ubx_ck_b);
-            ubx_state = UBX_STATE_LEN2;
-            break;
-
-        case UBX_STATE_LEN2:
-            ubx_length |= (byte << 8);
-            ubx_checksum(byte, &ubx_ck_a, &ubx_ck_b);
-            ubx_payload_pos = 0;
-            if (ubx_length > 0 && ubx_length < UBX_MAX_PAYLOAD) {
-                ubx_state = UBX_STATE_PAYLOAD;
-            } else if (ubx_length == 0) {
-                ubx_state = UBX_STATE_CK_A;
-            } else {
-                ubx_state = UBX_STATE_IDLE;  // Invalid length
-            }
-            break;
-
-        case UBX_STATE_PAYLOAD:
-            ubx_payload[ubx_payload_pos++] = byte;
-            ubx_checksum(byte, &ubx_ck_a, &ubx_ck_b);
-            if (ubx_payload_pos >= ubx_length) {
-                ubx_state = UBX_STATE_CK_A;
-            }
-            break;
-
-        case UBX_STATE_CK_A:
-            if (byte == ubx_ck_a) {
-                ubx_state = UBX_STATE_CK_B;
-            } else {
-                ubx_state = UBX_STATE_IDLE;  // Checksum error
-            }
-            break;
-
-        case UBX_STATE_CK_B:
-            if (byte == ubx_ck_b) {
-                // Valid message - process it
-                process_ubx_message();
-            }
+    case UBX_STATE_SYNC1:
+        if (byte == UBX_SYNC2) {
+            ubx_state = UBX_STATE_CLASS;
+            ubx_ck_a = 0;
+            ubx_ck_b = 0;
+        } else {
             ubx_state = UBX_STATE_IDLE;
-            break;
+        }
+        break;
 
-        default:
-            ubx_state = UBX_STATE_IDLE;
-            break;
+    case UBX_STATE_CLASS:
+        ubx_class = byte;
+        ubx_checksum(byte, &ubx_ck_a, &ubx_ck_b);
+        ubx_state = UBX_STATE_ID;
+        break;
+
+    case UBX_STATE_ID:
+        ubx_id = byte;
+        ubx_checksum(byte, &ubx_ck_a, &ubx_ck_b);
+        ubx_state = UBX_STATE_LEN1;
+        break;
+
+    case UBX_STATE_LEN1:
+        ubx_length = byte;
+        ubx_checksum(byte, &ubx_ck_a, &ubx_ck_b);
+        ubx_state = UBX_STATE_LEN2;
+        break;
+
+    case UBX_STATE_LEN2:
+        ubx_length |= (byte << 8);
+        ubx_checksum(byte, &ubx_ck_a, &ubx_ck_b);
+        ubx_payload_pos = 0;
+        if (ubx_length > 0 && ubx_length < UBX_MAX_PAYLOAD) {
+            ubx_state = UBX_STATE_PAYLOAD;
+        } else if (ubx_length == 0) {
+            ubx_state = UBX_STATE_CK_A;
+        } else {
+            ubx_state = UBX_STATE_IDLE; // Invalid length
+        }
+        break;
+
+    case UBX_STATE_PAYLOAD:
+        ubx_payload[ubx_payload_pos++] = byte;
+        ubx_checksum(byte, &ubx_ck_a, &ubx_ck_b);
+        if (ubx_payload_pos >= ubx_length) {
+            ubx_state = UBX_STATE_CK_A;
+        }
+        break;
+
+    case UBX_STATE_CK_A:
+        if (byte == ubx_ck_a) {
+            ubx_state = UBX_STATE_CK_B;
+        } else {
+            ubx_state = UBX_STATE_IDLE; // Checksum error
+        }
+        break;
+
+    case UBX_STATE_CK_B:
+        if (byte == ubx_ck_b) {
+            // Valid message - process it
+            process_ubx_message();
+        }
+        ubx_state = UBX_STATE_IDLE;
+        break;
+
+    default:
+        ubx_state = UBX_STATE_IDLE;
+        break;
     }
 }
 
 int gps_init() {
     LOGI("Initializing u-blox GPS on UART0 (ttyS0) at 9600 baud");
-    
+
     gps_fd = uart_open(GPS_UART_PORT);
     if (gps_fd < 0) {
         LOGE("Failed to open GPS UART");
@@ -285,7 +289,7 @@ void gps_update() {
     }
 
     uint8_t byread = 0;
-    
+
     // Read up to 256 bytes per update cycle (UBX messages can be larger than NMEA)
     while (bytes_read < 256 && uart_read_byte(gps_fd, &byte) == 1) {
         process_gps_data(byte);

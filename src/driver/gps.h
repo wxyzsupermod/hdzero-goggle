@@ -16,14 +16,14 @@ typedef enum {
 
 // GPS data structure
 typedef struct {
-    double latitude;      // Degrees
-    double longitude;     // Degrees
-    float altitude;       // Meters above sea level
-    float speed;          // Speed in m/s
-    float heading;        // Heading in degrees (0-360)
-    uint8_t satellites;   // Number of satellites
-    gps_fix_type_t fix;   // Fix type
-    bool valid;           // Data is valid
+    double latitude;    // Degrees
+    double longitude;   // Degrees
+    float altitude;     // Meters above sea level
+    float speed;        // Speed in m/s
+    float heading;      // Heading in degrees (0-360)
+    uint8_t satellites; // Number of satellites
+    gps_fix_type_t fix; // Fix type
+    bool valid;         // Data is valid
 } gps_data_t;
 
 // Initialize u-blox GPS on UART0 (ttyS0) at 9600 baud

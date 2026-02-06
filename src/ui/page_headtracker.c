@@ -185,7 +185,7 @@ static void page_headtracker_set_alarm_angle_timer_cb(struct _lv_timer_t *timer)
 
 static void page_headtracker_update_gps_status(struct _lv_timer_t *timer) {
     char buf[128];
-    
+
     // Check if calibrated
     if (ht_antenna_tracker_is_calibrated()) {
         snprintf(buf, sizeof(buf), "GPS: Calibrated");
@@ -193,7 +193,7 @@ static void page_headtracker_update_gps_status(struct _lv_timer_t *timer) {
         // Show local GPS status
         gps_data_t local_gps = gps_get_data();
         bool drone_gps_valid = ht_antenna_tracker_is_gps_valid();
-        
+
         if (local_gps.valid && drone_gps_valid) {
             snprintf(buf, sizeof(buf), "GPS: Ready (%d sats)", local_gps.satellites);
         } else if (local_gps.valid) {

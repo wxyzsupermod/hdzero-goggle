@@ -211,10 +211,10 @@ static void get_imu_data() {
 
 static void timer_callback_imu(union sigval timer_data) {
     get_imu_data();
-    
+
     // Update GPS data for antenna tracking
     gps_update();
-    
+
     calculate_orientation();
 }
 
@@ -370,22 +370,22 @@ static void calculate_orientation() {
     ht_data.rollAngle = getRoll() - ht_data.rollAngleHome;
 
     // Select output mode: head tracking or antenna tracking
-    if (g_setting.ht.output_mode == SETTING_HT_OUTPUT_ANTENNA_GROUND && 
-        ht_antenna_tracker_is_calibrated() && 
+    if (g_setting.ht.output_mode == SETTING_HT_OUTPUT_ANTENNA_GROUND &&
+        ht_antenna_tracker_is_calibrated() &&
         ht_antenna_tracker_is_gps_valid()) {
         // Antenna tracker mode: output GPS-calculated angles to servos
-        float azimuth = ht_get_drone_azimuth();    // -180 to +180 degrees
+        float azimuth = ht_get_drone_azimuth();     // -180 to +180 degrees
         float elevation = ht_get_drone_elevation(); // 0 to 90 degrees
-        
+
         // Convert to servo pulses (1000-2000µs)
         // Pan: azimuth angle mapped to full servo range
         tmp = normalize(azimuth, -180.0, 180.0) * ht_data.panInverse * ht_data.panFactor + 0.5;
         ht_data.htChannels[0] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
-        
+
         // Tilt: elevation angle (0-90° mapped to servo range)
         tmp = (elevation / 90.0) * ppmMaxPulse * ht_data.tiltInverse + 0.5;
         ht_data.htChannels[1] = constrain(tmp + ppmCenter, ppmCenter, ppmMaxPulse + ppmCenter);
-        
+
         // Roll: not used for antenna tracking, keep centered
         ht_data.htChannels[2] = ppmCenter;
     } else {
@@ -406,7 +406,7 @@ static void calculate_orientation() {
         ht_data.htChannels[1] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
 #endif
     }
-    
+
     // Send to FPGA for CPPM output on 3.5mm jack
     Set_HT_dat(ht_data.htChannels[0], ht_data.htChannels[1], ht_data.htChannels[2]);
 
@@ -511,7 +511,7 @@ bool ht_antenna_tracker_is_gps_valid() {
 void ht_antenna_tracker_calibrate() {
     // Get GPS position from external GPS module (UART0)
     gps_data_t local_gps = gps_get_data();
-    
+
     if (!local_gps.valid || !gps_has_fix()) {
         LOGW("Cannot calibrate antenna tracker: Local GPS not valid or no fix");
         return;
@@ -545,8 +545,7 @@ void ht_antenna_tracker_calibrate() {
         ht_data.antenna_tracker.user_latitude,
         ht_data.antenna_tracker.user_longitude,
         ht_data.antenna_tracker.takeoff_latitude,
-        ht_data.antenna_tracker.takeoff_longitude
-    );
+        ht_data.antenna_tracker.takeoff_longitude);
 
     LOGI("Antenna tracker calibration complete:");
     LOGI("  Tracker GPS: lat=%.6f, lon=%.6f, alt=%.1fm",
