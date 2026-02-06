@@ -113,6 +113,11 @@ typedef struct {
     uint8_t auto_off; // 0=1min,1=3min,2=4min,3=5min,4=never,
 } setting_image_t;
 
+typedef enum {
+    SETTING_HT_OUTPUT_HEAD_TRACKING = 0,  // Normal head tracking output
+    SETTING_HT_OUTPUT_ANTENNA_GROUND = 1, // Ground antenna tracker (GPS-based)
+} setting_ht_output_mode_t;
+
 typedef struct {
     bool enable;
     int max_angle;
@@ -130,6 +135,7 @@ typedef struct {
     bool alarm_on_video;
     bool pan_invert;
     bool tilt_invert;
+    setting_ht_output_mode_t output_mode;
 } setting_head_tracker_t;
 
 typedef struct {

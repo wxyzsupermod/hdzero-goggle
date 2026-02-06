@@ -7,6 +7,7 @@
 
 #include "common.hh"
 #include "core/app_state.h"
+#include "driver/gps.h"
 #include "ht.h"
 #include "lang/language.h"
 #include "page_common.h"
@@ -21,6 +22,7 @@ static btn_group_t page_select;
 static page_t curr_page = 0;
 
 static btn_group_t btn_group;
+static btn_group_t btn_group_output_mode;
 static btn_group_t btn_group_pan_invert;
 static btn_group_t btn_group_tilt_invert;
 
@@ -182,15 +184,25 @@ static void page_headtracker_set_alarm_angle_timer_cb(struct _lv_timer_t *timer)
 }
 
 static void page_headtracker_update_gps_status(struct _lv_timer_t *timer) {
-    char buf[64];
-    uint8_t arm_count = ht_antenna_tracker_get_arm_count();
-
-    if (arm_count == 0) {
-        snprintf(buf, sizeof(buf), "GPS: Arm at user pos");
-    } else if (arm_count == 1) {
-        snprintf(buf, sizeof(buf), "GPS: Arm at takeoff");
-    } else {
+    char buf[128];
+    
+    // Check if calibrated
+    if (ht_antenna_tracker_is_calibrated()) {
         snprintf(buf, sizeof(buf), "GPS: Calibrated");
+    } else {
+        // Show local GPS status
+        gps_data_t local_gps = gps_get_data();
+        bool drone_gps_valid = ht_antenna_tracker_is_gps_valid();
+        
+        if (local_gps.valid && drone_gps_valid) {
+            snprintf(buf, sizeof(buf), "GPS: Ready (%d sats)", local_gps.satellites);
+        } else if (local_gps.valid) {
+            snprintf(buf, sizeof(buf), "GPS: Local OK, waiting drone");
+        } else if (drone_gps_valid) {
+            snprintf(buf, sizeof(buf), "GPS: Drone OK, waiting local");
+        } else {
+            snprintf(buf, sizeof(buf), "GPS: Waiting for fix...");
+        }
     }
 
     lv_label_set_text(label_gps_status, buf);
@@ -237,29 +249,32 @@ static lv_obj_t *page_headtracker_create(lv_obj_t *parent, panel_arr_t *arr) {
     // page 1 items
     create_btn_group_item(&btn_group, cont, 2, _lang("Tracking"), _lang("On"), _lang("Off"), "", "", 1);
 
-    label_cali = create_label_item(cont, _lang("Calibrate"), 1, 2, 1);
+    create_btn_group_item(&btn_group_output_mode, cont, 2, "Output Mode", "Head Track", "Ant Track", "", "", 2);
 
-    label_gps_status = create_label_item(cont, "GPS: Not Cal", 1, 3, 1);
+    label_cali = create_label_item(cont, _lang("Calibrate"), 1, 3, 1);
 
-    label_reset_gps = create_label_item(cont, "Reset GPS Cal", 1, 4, 1);
+    label_gps_status = create_label_item(cont, "GPS: Not Cal", 1, 4, 1);
 
-    label_center = create_label_item(cont, _lang("Set Center"), 1, 5, 1);
+    label_reset_gps = create_label_item(cont, "Reset GPS Cal", 1, 5, 1);
 
-    create_slider_item(&slider_group, cont, _lang("Max Angle"), 360, g_setting.ht.max_angle, 6);
+    label_center = create_label_item(cont, _lang("Set Center"), 1, 6, 1);
+
+    create_slider_item(&slider_group, cont, _lang("Max Angle"), 360, g_setting.ht.max_angle, 7);
     lv_slider_set_range(slider_group.slider, 0, 360);
 
-    create_btn_group_item(&btn_group_pan_invert, cont, 2, _lang("Pan Invert"), _lang("Off"), _lang("On"), "", "", 7);
+    create_btn_group_item(&btn_group_pan_invert, cont, 2, _lang("Pan Invert"), _lang("Off"), _lang("On"), "", "", 8);
 
-    create_btn_group_item(&btn_group_tilt_invert, cont, 2, _lang("Tilt Invert"), _lang("Off"), _lang("On"), "", "", 8);
+    create_btn_group_item(&btn_group_tilt_invert, cont, 2, _lang("Tilt Invert"), _lang("Off"), _lang("On"), "", "", 9);
 
     btn_group_set_sel(&btn_group, !g_setting.ht.enable);
+    btn_group_set_sel(&btn_group_output_mode, g_setting.ht.output_mode);
     btn_group_set_sel(&alarm_state, g_setting.ht.alarm_state);
     btn_group_set_sel(&page_select, 0);
     btn_group_set_sel(&btn_group_pan_invert, g_setting.ht.pan_invert ? 1 : 0);
     btn_group_set_sel(&btn_group_tilt_invert, g_setting.ht.tilt_invert ? 1 : 0);
 
     snprintf(buf, sizeof(buf), "< %s", _lang("Back"));
-    create_label_item(cont, buf, 1, 9, 1);
+    create_label_item(cont, buf, 1, 10, 1);
 
     create_label_item(cont, _lang("Pan"), 1, 11, 1);
     pan = lv_bar_create(cont);
@@ -391,24 +406,28 @@ static void page_headtracker_on_click_page1(uint8_t key, int sel) {
 
         update_visibility(curr_page);
     } else if (sel == 2) {
+        btn_group_toggle_sel(&btn_group_output_mode);
+        g_setting.ht.output_mode = btn_group_get_sel(&btn_group_output_mode);
+        ini_putl("ht", "output_mode", g_setting.ht.output_mode, SETTING_INI);
+    } else if (sel == 3) {
         snprintf(buf, sizeof(buf), "%s...", _lang("Calibrating"));
         lv_label_set_text(label_cali, buf);
         lv_timer_handler();
         ht_calibrate();
         lv_label_set_text(label_cali, _lang("Re-calibrate"));
         lv_timer_handler();
-    } else if (sel == 3) {
+    } else if (sel == 4) {
         // GPS status display - refresh the status
         page_headtracker_update_gps_status(NULL);
         lv_timer_handler();
-    } else if (sel == 4) {
+    } else if (sel == 5) {
         // Reset GPS calibration
         ht_antenna_tracker_reset_calibration();
         page_headtracker_update_gps_status(NULL);
         lv_timer_handler();
-    } else if (sel == 5) {
-        ht_set_center_position();
     } else if (sel == 6) {
+        ht_set_center_position();
+    } else if (sel == 7) {
         if (angle_slider_selected) {
             page_headtracker_exit_slider();
         } else {
@@ -416,18 +435,18 @@ static void page_headtracker_on_click_page1(uint8_t key, int sel) {
             lv_obj_add_style(slider_group.slider, &style_silder_select, LV_PART_MAIN);
             angle_slider_selected = true;
         }
-    } else if (sel == 7) {
+    } else if (sel == 8) {
         btn_group_toggle_sel(&btn_group_pan_invert);
         g_setting.ht.pan_invert = btn_group_get_sel(&btn_group_pan_invert) == 1;
         settings_put_bool("ht", "pan_invert", g_setting.ht.pan_invert);
-    } else if (sel == 8) {
+    } else if (sel == 9) {
         btn_group_toggle_sel(&btn_group_tilt_invert);
         g_setting.ht.tilt_invert = btn_group_get_sel(&btn_group_tilt_invert) == 1;
         settings_put_bool("ht", "tilt_invert", g_setting.ht.tilt_invert);
-    } else if (sel == 9) {
+    } else if (sel == 10) {
         // Visualization bars - not clickable
         return;
-    } else if (sel == 10) {
+    } else if (sel == 11) {
         // Back button - handled by common navigation
         page_headtracker_exit();
         return;

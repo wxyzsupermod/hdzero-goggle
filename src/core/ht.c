@@ -20,6 +20,7 @@
 #include "core/sleep_mode.h"
 #include "driver/beep.h"
 #include "driver/dm6302.h"
+#include "driver/gps.h"
 #include "driver/hardware.h"
 #include "driver/rtc6715.h"
 #include "driver/screen.h"
@@ -210,6 +211,10 @@ static void get_imu_data() {
 
 static void timer_callback_imu(union sigval timer_data) {
     get_imu_data();
+    
+    // Update GPS data for antenna tracking
+    gps_update();
+    
     calculate_orientation();
 }
 
@@ -242,6 +247,13 @@ void ht_init() {
     ht_data.gyr_offset[0] = g_setting.ht.gyr_x;
     ht_data.gyr_offset[1] = g_setting.ht.gyr_y;
     ht_data.gyr_offset[2] = g_setting.ht.gyr_z;
+
+    // Initialize GPS module for antenna tracking
+    if (gps_init() == 0) {
+        LOGI("GPS module initialized for antenna tracking");
+    } else {
+        LOGW("GPS module initialization failed - antenna tracking will use OSD GPS only");
+    }
 
 #ifndef EMULATOR_BUILD
     // start timer (not supported in emulator)
@@ -357,21 +369,45 @@ static void calculate_orientation() {
     ht_data.tiltAngle = getPitch() - ht_data.tiltAngleHome;
     ht_data.rollAngle = getRoll() - ht_data.rollAngleHome;
 
+    // Select output mode: head tracking or antenna tracking
+    if (g_setting.ht.output_mode == SETTING_HT_OUTPUT_ANTENNA_GROUND && 
+        ht_antenna_tracker_is_calibrated() && 
+        ht_antenna_tracker_is_gps_valid()) {
+        // Antenna tracker mode: output GPS-calculated angles to servos
+        float azimuth = ht_get_drone_azimuth();    // -180 to +180 degrees
+        float elevation = ht_get_drone_elevation(); // 0 to 90 degrees
+        
+        // Convert to servo pulses (1000-2000µs)
+        // Pan: azimuth angle mapped to full servo range
+        tmp = normalize(azimuth, -180.0, 180.0) * ht_data.panInverse * ht_data.panFactor + 0.5;
+        ht_data.htChannels[0] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
+        
+        // Tilt: elevation angle (0-90° mapped to servo range)
+        tmp = (elevation / 90.0) * ppmMaxPulse * ht_data.tiltInverse + 0.5;
+        ht_data.htChannels[1] = constrain(tmp + ppmCenter, ppmCenter, ppmMaxPulse + ppmCenter);
+        
+        // Roll: not used for antenna tracking, keep centered
+        ht_data.htChannels[2] = ppmCenter;
+    } else {
+        // Normal head tracking mode: output IMU angles
 #if defined(HDZGOGGLE) || defined(HDZGOGGLE2)
-    tmp = normalize(ht_data.panAngle, -180.0, 180.0) * ht_data.panInverse * ht_data.panFactor + 0.5;
-    ht_data.htChannels[0] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
-    tmp = normalize(ht_data.tiltAngle, -180.0, 180.0) * ht_data.tiltInverse * ht_data.tiltFactor + 0.5;
-    ht_data.htChannels[1] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
-    tmp = normalize(ht_data.rollAngle, -180.0, 180.0) * ht_data.rollInverse * ht_data.rollFactor + 0.5;
-    ht_data.htChannels[2] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
+        tmp = normalize(ht_data.panAngle, -180.0, 180.0) * ht_data.panInverse * ht_data.panFactor + 0.5;
+        ht_data.htChannels[0] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
+        tmp = normalize(ht_data.tiltAngle, -180.0, 180.0) * ht_data.tiltInverse * ht_data.tiltFactor + 0.5;
+        ht_data.htChannels[1] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
+        tmp = normalize(ht_data.rollAngle, -180.0, 180.0) * ht_data.rollInverse * ht_data.rollFactor + 0.5;
+        ht_data.htChannels[2] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
 #elif defined HDZBOXPRO
-    tmp = normalize(ht_data.panAngle, -180.0, 180.0) * ht_data.panInverse * ht_data.panFactor + 0.5;
-    ht_data.htChannels[0] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
-    tmp = normalize(ht_data.tiltAngle, -180.0, 180.0) * ht_data.tiltInverse * ht_data.tiltFactor + 0.5;
-    ht_data.htChannels[2] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
-    tmp = normalize(ht_data.rollAngle, -180.0, 180.0) * ht_data.rollInverse * ht_data.rollFactor + 0.5;
-    ht_data.htChannels[1] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
+        tmp = normalize(ht_data.panAngle, -180.0, 180.0) * ht_data.panInverse * ht_data.panFactor + 0.5;
+        ht_data.htChannels[0] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
+        tmp = normalize(ht_data.tiltAngle, -180.0, 180.0) * ht_data.tiltInverse * ht_data.tiltFactor + 0.5;
+        ht_data.htChannels[2] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
+        tmp = normalize(ht_data.rollAngle, -180.0, 180.0) * ht_data.rollInverse * ht_data.rollFactor + 0.5;
+        ht_data.htChannels[1] = constrain(tmp, ppmMinPulse, ppmMaxPulse) + ppmCenter;
 #endif
+    }
+    
+    // Send to FPGA for CPPM output on 3.5mm jack
     Set_HT_dat(ht_data.htChannels[0], ht_data.htChannels[1], ht_data.htChannels[2]);
 
     if (elrs_headtracking_enabled()) {
@@ -473,33 +509,58 @@ bool ht_antenna_tracker_is_gps_valid() {
 }
 
 void ht_antenna_tracker_calibrate() {
-    if (!ht_data.gps_data.valid) {
-        LOGW("Cannot calibrate antenna tracker: GPS data not valid");
+    // Get GPS position from external GPS module (UART0)
+    gps_data_t local_gps = gps_get_data();
+    
+    if (!local_gps.valid || !gps_has_fix()) {
+        LOGW("Cannot calibrate antenna tracker: Local GPS not valid or no fix");
         return;
     }
 
-    // This is now a simplified manual calibration - just sets user and takeoff to same position
-    // For proper calibration, use automatic two-arm method via ht_antenna_tracker_on_arm_event()
-    ht_data.antenna_tracker.user_latitude = ht_data.gps_data.latitude;
-    ht_data.antenna_tracker.user_longitude = ht_data.gps_data.longitude;
-    ht_data.antenna_tracker.user_altitude = ht_data.gps_data.altitude;
+    if (!ht_data.gps_data.valid) {
+        LOGW("Cannot calibrate antenna tracker: Drone GPS not valid");
+        return;
+    }
 
+    // Store goggle/tracker GPS position
+    ht_data.antenna_tracker.user_latitude = local_gps.latitude;
+    ht_data.antenna_tracker.user_longitude = local_gps.longitude;
+    ht_data.antenna_tracker.user_altitude = local_gps.altitude;
+
+    // Store drone position at takeoff (from OSD telemetry)
     ht_data.antenna_tracker.takeoff_latitude = ht_data.gps_data.latitude;
     ht_data.antenna_tracker.takeoff_longitude = ht_data.gps_data.longitude;
     ht_data.antenna_tracker.takeoff_altitude = ht_data.gps_data.altitude;
 
-    // Store current head tracker angles as offsets
+    // Store current head tracker angles as heading reference
+    // User should point goggles at drone during calibration
     ht_data.antenna_tracker.pan_offset = ht_data.panAngle;
     ht_data.antenna_tracker.tilt_offset = ht_data.tiltAngle;
 
     ht_data.antenna_tracker.arm_count = 2; // Mark as calibrated
     ht_data.antenna_tracker.is_calibrated = true;
-    ht_data.antenna_tracker.legacy_mode = true; // Single-point mode
+    ht_data.antenna_tracker.legacy_mode = false;
 
-    LOGI("Antenna tracker manual calibration (legacy mode): lat=%.6f, lon=%.6f, alt=%.1fm",
+    double distance = ht_calculate_distance(
+        ht_data.antenna_tracker.user_latitude,
+        ht_data.antenna_tracker.user_longitude,
+        ht_data.antenna_tracker.takeoff_latitude,
+        ht_data.antenna_tracker.takeoff_longitude
+    );
+
+    LOGI("Antenna tracker calibration complete:");
+    LOGI("  Tracker GPS: lat=%.6f, lon=%.6f, alt=%.1fm",
          ht_data.antenna_tracker.user_latitude,
          ht_data.antenna_tracker.user_longitude,
          ht_data.antenna_tracker.user_altitude);
+    LOGI("  Drone GPS: lat=%.6f, lon=%.6f, alt=%.1fm",
+         ht_data.antenna_tracker.takeoff_latitude,
+         ht_data.antenna_tracker.takeoff_longitude,
+         ht_data.antenna_tracker.takeoff_altitude);
+    LOGI("  Distance: %.1fm, Pan offset: %.1f°, Tilt offset: %.1f°",
+         distance,
+         ht_data.antenna_tracker.pan_offset,
+         ht_data.antenna_tracker.tilt_offset);
 }
 
 bool ht_antenna_tracker_is_calibrated() {
